@@ -55,3 +55,8 @@ Stan gry powinien mieć reprezentację obiektową, która przy kolejnych informa
 
 Proponowane rozwiązanie: **WebGL**
 
+## Mocki graficzne
+
+### Przykładowy interfejs gry
+
+![Przykładowy interfejs gry](img/gameplay&#32;mock.png)
