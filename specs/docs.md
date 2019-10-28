@@ -22,14 +22,20 @@ Jesteśmy świadomi istnienia podobnych rozwiązań na rynku, z czego najpopular
 
 ### Podstawowe
 Wymagania, które ma spełniać aktualna wersja rozwijanej gry:
-- utworzenie serwera gry na sieci lokalnej
-- utworzenie lobby gry
-- hostowanie strony internetowej będącej kontrolerem poszczególnych graczy, umożliwiającej wybór pseudonimu
-- możliwość dołączenia do lobby gry o konkretnym identyfikatorze przez graczy
-- rozgrywka oparta na zasadzie "każdy na każdego", gdzie gracze kontrolują ruch i atak swoich postaci; zwycięscą zostaje gracz z największą liczbą zabójstw innych graczy
-- rozgrywka turowa, tura kończący się, kiedy na planszy zostaje ostatni gracz
-- plansza generowana parametrycznie, losowa w każdej turze
-- długość tury ograniczona przez zacieśniający się "krąg śmierci" z krawędzi planszy, mający na celu zmniejszyć liczbę sytuacji, gdzie dwóch ostatnich graczy nie walczy ze sobą
+- **Lokalny serwer rozgrywki**
+-- Jedno z głównych założeń projektu to płynny i niezakłócony przebieg rozgrywki, nawet w przypadku gorszego dostępu do internetu. Ograniczenie rozrywki do sieci lokalnej umożliwi zachowanie minimalnych opóźnień, niezależnie od warunków.
+- **Tworzenie lobby gry**
+-- Możliwość podziału jednej instancji serwera do prowadzenia wielu rozgrywek umożliwi przebieg paru równoczesnych rywalizacji, np. w sytuacjach turniejowych.
+- **Strona internetowa pełniąca funkcja kontrolera**
+-- Implementacja sterowania postacią gracza w postaci strony internetowej pozwoli zarówno zaoszczędzić czas, który musiałby zostać poświęcony na stworzenie aplikacji natywnych, jak i jednolitą formę rozgrywki dla każdego urządzenia. Powinna umożliwić wybranie pseudonimu gracza.
+- **Możliwość dołączenia do lobby przez graczy**
+-- Dołączenie do lobby rozgrywki powinno opierać się na wpisaniu identyfikatora pokoju na stronie służącej za kontroler dla gracza.
+- **Zrozumiały i jednolity przebieg rozgrywki**
+-- Rozgrywka oparta będzie na zasadzie "każdy na każdego". Gracze kontrolują ruch i atak swoich postaci, a zwycięzcą rundy zostaje gracz z największą liczbą zabójstw. Po rozegnaniu odpowiedniej liczby rund, rozgrywka kończy się i wybrany zostaje ostateczny zwycięzca.
+- **Mapa generowana parametrycznie**
+-- Na początku każdej rundy generowana jest plansza, składająca się z otwartej przestrzeni wypełnionej wielokątami, pełniącymi funkcję przeszkód. Rozmiar planszy zależy od ilości graczy.
+- **Krąg śmierci**
+-- Długość tury ograniczona będzie przez zacieśniający się z krawędzi planszy "krąg śmierci", mający na celu nie dopuścić do sytuacji, w której dwóch ostatnich graczy nie walczy ze sobą, "kampi".
 
 ### Dodatkowe
 Funkcjonalności rozważane w kolejnych iteracjach projektu:
@@ -45,12 +51,20 @@ Wymagania niezwiązane z funkcjonalnością gry:
 
 ## Ryzyka
 Projekt może okazać się trudny w realizacji i utrzymaniu w wielu aspektach, takich jak:
-- problemy z wydajnością backendu przeliczającego ruchy graczy
-- przejęcie rynku docelowego przez inną grę
-- niekomfortowe sterowanie
-- zmiana koncepcji w wypadku napotkania przeszkód czasowych
-- trudności z poprawnym generowaniem planszy
-- czytelna rozgrywka w rozdzielczości Full HD
+- **Wydajność backendu**
+-- Rozgrywka opiera się na założeniu płynności, ponieważ przebiega w czasie rzeczywistym i wymaga odpowiednich czasów reakcji ze strony gracza. Jeśli backend nie będzie nadążał z obliczeniami, gracze mogą się irytować.
+-- Kalkulacje wymagane w przebiegu rozgrywki nie są skomplikowane, więc prawdopodobieństwo ryzyka ogranicza się do zastosowania odpowiednich metod matematycznych.
+-- W przypadku wystąpienia problemu z optymalizacją, można uprościć schemat rozgrywki bądź dokonać ściślejszych optymalizacji (np. poprzez zmianę używanych protokołów)
+- **Niekomfortowe sterowanie**
+-- Sterowanie jest czynnikiem który może sprawić, że słaba gra będzie hitem, a jednocześnie z dobrej gry zrobić bezużyteczny produkt. Odpowiedni UX jest krytycznym czynnikiem w przypadku prostego schematu rozgrywki.
+-- Odtworzenie formy pada na ekranie telefonu zostało już wielokrotnie przetestowane (emulatory GameBoy Advance bądź SNES), ryzyko leży więc po stronie implementacji. W wypadku problemów, można skorzystać z gotowych rozwiązań.
+- **Trudności z poprawnym generowaniem planszy**
+-- Bugi wynikające z losowo generowanych map znane są każdemu graczowi, jednak w środowisku kompetytywnym prowadzą raczej do irytacji, prowadzić mogą bowiem do nierównej rozgrywki (np. odcięcie jednego gracza od reszty, efektywnie zapewniając zwycięstwo w danej rundzie)
+-- Modele prostych generatorów zostały już wielokrotnie wykonane, więc przy świadomym korzystaniu z dostępnej wiedzy ryzyko wystąpienia problemów oceniamy na średnie.
+-- W przypadku większych problemów, można wykorzystać zdefiniowane wcześniej elementy w celu generacji całości, co powinno ograniczyć złożoność procesu.
+- **Czytelna rozgrywka w rozdzielczości Full HD**
+-- Wyzwanie będzie polegało na wyświetleniu na ekranie całości planszy, jednocześnie zapewniając komfortową i ekscytującą rozgrywkę dla wielu graczy.
+-- Odpowiednie skalowanie rozmiaru zarówno postaci, jak i przeszkód, będzie kluczowym czynnikiem w redukcji szans wystąpienia tego problemu. 
 
 ## Narzędzia używane do realizacji
 
