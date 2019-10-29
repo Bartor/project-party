@@ -85,6 +85,26 @@ Projekt może okazać się trudny w realizacji i utrzymaniu w wielu aspektach, t
 |renderowanie gry      |WebGL                   |
 |komunikacja z frontem |gorilla/websocket       |
 
+## Harmonogram
+1. Podstawowe protokoły - pierwsze dwa tygodnie
+   - Konieczne jest wykonanie najbardziej podstawowych rozwiązań i stworzenie protokołów komunikacji między nimi (API). Umożliwi to dalszą, oddzielną pracę nad konkretnymi elementami aplikacji.
+2. Podstawy komunikacji między klientem a serwerem - do prototypu
+   - Prototyp wymaga funkcjonalnego backendu, natomiast optymalizacja pod większą liczbę graczy nie jest na tym etapie jeszcze konieczna.
+3. Podstawy grafiki i sterowania - do prototypu
+   - Do przeprowadzenia prototypowej rozgrywki wymagane będzie podstawowe sterowanie oraz wyświetlanie stanu gry.
+3. Bazowa rozgrywka - do prototypu
+   - Pierwszy prototyp zakłada umożliwienie dwóm graczom przeprowadzenie rozgrywki w najprostszej postaci. Wymaga to podstawowej mapy, funkcjonującej komunikacji między klientem i serwerem oraz podstawowego sterowania oraz wyświetlania przebiegu rozgrywki.
+4. Rozwój generacji mapy - wersja beta
+   - Wersja beta powinna zawierać mapy generowane losowanie, konieczne będą więc kolejne prace nad jej rozwojem
+5. Optymalizacja serwera pod większa ilosć graczy - wersja beta
+   - Projekt zakłada komfortową rozgrywkę dla 10 graczy, konieczne więc będzie upewnienie się, że serwer jest w stanie obsłużyć większy ruch.
+6. Kompletna szata graficzna gry - wersja beta
+   - Szata graficzna powinna być sfinalizowana do wersji beta projektu, by umożliwić ewentualnie przeniesienie zasobów ludzkich w bardziej potrzebne rejony aplikacji.
+7. Stress-testy rozgrywki - przed wersją beta
+   - Należy zweryfikować zachowanie serwera w skrajnych warunkach obciążenia, jak i również przyszłych, prawdziwych warunkach użytkowych
+8. Dodatkowe funkcjonalności - po wersji beta, przed wersją finalną
+   - W przypadku pozytywnego przebiegu testów wersji beta należy wziąc pod uwagę potencjalne dodatkowe funkcjonalności, np. wspomnianie power-upy. 
+
 ## Specyfikacja techniczna
 
 ### Komponenty projektu
