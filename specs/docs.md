@@ -2,11 +2,11 @@
 Wieloosobowa gra imprezowa tworzona na potrzeby kursu Programowanie Zespołowe na semestrze zimowym 2019/2020 na WPPT, PWr.
 
 ## Zespół
-- **Karol Kobiałka**
+- **Karol Kobiałka (team leader)**
 - Piotr Kołodziejczyk
 - Bartosz Rajczyk
 - Michał Wawrzyniak
-- Paweł Wilkosz
+- Paweł Wilkosz (zastępca)
 
 ## Analiza biznesowa
 
