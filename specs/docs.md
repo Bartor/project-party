@@ -105,6 +105,13 @@ Projekt może okazać się trudny w realizacji i utrzymaniu w wielu aspektach, t
 8. Dodatkowe funkcjonalności - po wersji beta, przed wersją finalną
    - W przypadku pozytywnego przebiegu testów wersji beta należy wziąc pod uwagę potencjalne dodatkowe funkcjonalności, np. wspomnianie power-upy. 
    
+### Przydział obowiązków do części oraz terminy
+|Część projektu        |deweloperzy                           |
+|----------------------|--------------------------------------|
+|backend               |Karol Kobiałka, Paweł Wilkosz         |
+|frontend              |Bartosz Rajczyk                       |
+|parametryczna mapa    |Piotr Kołodziejczyk, Michał Wawrzyniak|
+   
 ![Diagram Gantta](img/gantt.png)
 
 ## Specyfikacja techniczna
@@ -127,13 +134,6 @@ Komunikacja w całej aplikacji:
 
 ![Komunikacja w całej aplikacji](img/flowchar-app.png)
 
-### Przydział obowiązków do części
-|Część projektu        |deweloperzy                           |
-|----------------------|--------------------------------------|
-|backend               |Karol Kobiałka, Paweł Wilkosz         |
-|frontend gry          |Bartosz Rajczyk                       |
-|frontend kontrolera   |Bartosz Rajczyk                       |
-|parametryczna mapa    |Piotr Kołodziejczyk, Michał Wawrzyniak|
 
 ## Mocki graficzne
 
