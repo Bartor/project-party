@@ -104,6 +104,8 @@ Projekt może okazać się trudny w realizacji i utrzymaniu w wielu aspektach, t
    - Należy zweryfikować zachowanie serwera w skrajnych warunkach obciążenia, jak i również przyszłych, prawdziwych warunkach użytkowych
 8. Dodatkowe funkcjonalności - po wersji beta, przed wersją finalną
    - W przypadku pozytywnego przebiegu testów wersji beta należy wziąc pod uwagę potencjalne dodatkowe funkcjonalności, np. wspomnianie power-upy. 
+   
+![Diagram Gantta](img/gantt.png)
 
 ## Specyfikacja techniczna
 
