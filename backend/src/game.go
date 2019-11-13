@@ -7,16 +7,20 @@ type Game struct {
 	controllerMessages chan []byte
 
 	register chan *Controller
-
 	unregister chan *Controller
+
+	registerScreen chan *Screen
+	unregisterScreen chan bool
 }
 
 func newGame() *Game {
 	return &Game{
+		controllers:    make(map[*Controller]bool),
 		controllerMessages:  make(chan []byte),
 		register:   make(chan *Controller),
 		unregister: make(chan *Controller),
-		controllers:    make(map[*Controller]bool),
+		registerScreen:   make(chan *Screen),
+		unregisterScreen: make(chan bool),
 	}
 }
 
@@ -29,7 +33,12 @@ func (g *Game) run() {
 			if _, ok := g.controllers[controller]; ok {
 				delete(g.controllers, controller)
 			}
-			// TODO: register screen
+		case screen := <-g.registerScreen:
+			if g.screen == nil {
+				g.screen = screen
+			}
+		case <-g.unregisterScreen:
+			g.screen = nil
 		case message := <-g.controllerMessages:
 			// TODO: handle controller messages
 			select {

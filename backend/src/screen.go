@@ -27,6 +27,7 @@ func (s *Screen) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
+		s.game.unregisterScreen <- true
 		s.conn.Close()
 	}()
 	for {
@@ -70,7 +71,7 @@ func serveScreenWs(game *Game, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	screen := &Screen{game: game, conn: conn, input: make(chan []byte, 256)}
-	// todo register screen
+	screen.game.registerScreen <- screen
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
