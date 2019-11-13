@@ -19,6 +19,7 @@ func main() {
 	http.HandleFunc("/controllerWs", func(w http.ResponseWriter, r *http.Request) {
 		serveControllerWs(game, w, r)
 	})
+	log.Println("app started")
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
