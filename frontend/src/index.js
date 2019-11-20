@@ -1,4 +1,5 @@
-import {ProjectParty, Player} from "./ProjectParty.js";
+import {Player, ProjectParty} from "./ProjectParty";
+import './styles/index';
 
 window.addEventListener('load', () => {
     const container = document.getElementById('container');

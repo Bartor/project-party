@@ -1,6 +1,8 @@
+import {Application, Graphics} from 'pixi.js';
+
 export class ProjectParty {
     constructor(container) {
-        this.app = new PIXI.Application({
+        this.app = new Application({
             antialias: true
         });
         container.appendChild(this.app.view);
@@ -15,12 +17,12 @@ export class Player {
     constructor(name, color, size) {
         this.name = name;
 
-        this.graphics = new PIXI.Graphics();
+        this.graphics = new Graphics();
         this.graphics.beginFill(0xffffff);
         this.graphics.drawCircle(size/2, size/2, size);
         this.graphics.endFill();
         this.graphics.beginFill(0xffffff);
-        this.graphics.drawPolygon(-size, -size, -1.15*size, 0.25*size, 0.25*size, -1.15*size);
+        this.graphics.drawPolygon([-size, -size, -1.15*size, 0.25*size, 0.25*size, -1.15*size]);
         this.graphics.endFill();
         this.graphics.lineStyle(size/4, 0xffffff);
         this.graphics.drawCircle(size/2, size/2, 1.5*size);
@@ -47,7 +49,7 @@ export class Player {
 
 export class Obstacle {
     constructor(vertices) {
-        this.graphics = new PIXI.Graphics();
+        this.graphics = new Graphics();
         this.graphics.beginFill(0xffffff);
         this.graphics.drawPolygon(vertices);
         this.graphics.endFill();
