@@ -1,7 +1,7 @@
 import {Graphics} from "pixi.js";
 import DisplayObject = PIXI.DisplayObject;
 import {PlayerState} from "../../shared/enums/PlayerState.enum";
-import {RotatedPosition} from "../../shared/interfaces/PlayerPosition.interface";
+import {RotatedPosition} from "../../shared/interfaces/RotatedPosition.interface";
 
 export class Player {
     public state = PlayerState.ALIVE;
@@ -24,10 +24,11 @@ export class Player {
         this.graphics.rotation = Math.PI / 4;
     }
 
-    toRotatedPosition(position: RotatedPosition) {
+    toRotatedPosition(position: RotatedPosition): Player {
         this.graphics.x = position.position.x;
         this.graphics.y = position.position.y;
         this.graphics.rotation = position.rotation + Math.PI / 4;
+        return this;
     }
 
     getGraphics(): DisplayObject {

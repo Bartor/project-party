@@ -3,6 +3,7 @@
     "moduleResolution": "node",
     "outDir": "./dist/",
     "noImplicitAny": true,
+    "downlevelIteration": true,
     "module": "es6",
     "sourceMap": true,
     "target": "es5",

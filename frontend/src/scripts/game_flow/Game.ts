@@ -4,15 +4,20 @@ import {CommunicationInterface} from "../communication/Communication.interface";
 import {GameMap} from "../game_objects/map/GameMap";
 import {PlayerState} from "../shared/enums/PlayerState.enum";
 import {Round} from "./Round";
+import {Subject} from "rxjs";
+import DisplayObject = PIXI.DisplayObject;
 
 export class Game {
     private round: Round;
     private players: Map<string, Player> = new Map();
     private scores: Map<string, number> = new Map();
 
+    private graphicsSubject = new Subject<DisplayObject[]>();
+    public graphicsUpdates = this.graphicsSubject.asObservable();
+
     private readonly playerLimit: number;
 
-    constructor(playerLimit: number = 8, communicationService: CommunicationInterface) {
+    constructor(communicationService: CommunicationInterface, playerLimit: number = 8) {
         this.playerLimit = playerLimit;
 
         communicationService.roundUpdates().subscribe(update => {
@@ -21,7 +26,9 @@ export class Game {
                 this.players.get(name).toRotatedPosition(position);
             });
 
-            this.round = new Round(this.players, new GameMap(update.map), communicationService.gameStateUpdates())
+            const map = new GameMap(update.map);
+            this.graphicsSubject.next([...map.getGraphics(), ...[...this.players.values()].map(player => player.getGraphics())]);
+            this.round = new Round(this.players, map, communicationService.gameStateUpdates())
         });
     }
 

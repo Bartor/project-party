@@ -1,5 +1,4 @@
 import {Application} from 'pixi.js';
-import {Player} from "./game_objects/player/Player";
 import {Game} from "./game_flow/Game";
 
 export class ProjectParty {
@@ -10,9 +9,10 @@ export class ProjectParty {
             antialias: true
         });
         container.appendChild(this.app.view);
-    }
 
-    public drawLoop() {
-
+        game.graphicsUpdates.subscribe(graphics => {
+            this.app.stage.removeChild(...this.app.stage.children);
+            this.app.stage.addChild(...graphics);
+        });
     }
 }
