@@ -1,12 +1,15 @@
 import {Graphics} from "pixi.js";
 import DisplayObject = PIXI.DisplayObject;
+import {PlayerState} from "../../shared/enums/PlayerState.enum";
+import {RotatedPosition} from "../../shared/interfaces/PlayerPosition.interface";
 
 export class Player {
+    public state = PlayerState.ALIVE;
     private graphics = new Graphics();
-    private name: string;
+    private color: number;
 
-    constructor(name: string, color: number, size: number) {
-        this.name = name;
+    constructor(color: number, size: number) {
+        this.color = color;
 
         this.graphics.beginFill(0xffffff);
         this.graphics.drawCircle(size / 2, size / 2, size);
@@ -21,15 +24,10 @@ export class Player {
         this.graphics.rotation = Math.PI / 4;
     }
 
-    toPosition(x: number, y: number) {
-        this.graphics.x = x;
-        this.graphics.y = y;
-        return this;
-    }
-
-    toRotation(rotation: number): Player {
-        this.graphics.rotation = rotation + Math.PI / 4;
-        return this;
+    toRotatedPosition(position: RotatedPosition) {
+        this.graphics.x = position.position.x;
+        this.graphics.y = position.position.y;
+        this.graphics.rotation = position.rotation + Math.PI / 4;
     }
 
     getGraphics(): DisplayObject {
