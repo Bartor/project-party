@@ -4,6 +4,12 @@ export class MeshGenerator {
     constructor(map, squareSize) {
         this.squareGrid = new SquareGrid(map, squareSize)
         this.vertices = []
+        this.vertices2 = []
+        
+        this.triangleDictionary = new Map();    // vertexIndex -> [triangles]
+        this.outlines = []
+        this.checkedVertices = []
+        this.vertexIndices  = new Map(); // vertexIndex - > Vector
 
         for (var x = 0; x < this.squareGrid.squares.length; x++) {
 			for (var y = 0; y < this.squareGrid.squares[0].length; y++) {
@@ -20,13 +26,13 @@ export class MeshGenerator {
 
             // 1 points:
             case 1:
-                this.meshFromPoints(square.centreBottom, square.bottomLeft, square.centreLeft);
+                this.meshFromPoints(square.centreLeft, square.centreBottom, square.bottomLeft);
                 break;
             case 2:
-                this.meshFromPoints(square.centreRight, square.bottomRight, square.centreBottom);
+                this.meshFromPoints(square.bottomRight, square.centreBottom, square.centreRight);
                 break;
             case 4:
-                this.meshFromPoints(square.centreTop, square.topRight, square.centreRight);
+                this.meshFromPoints(square.topRight, square.centreRight, square.centreTop);
                 break;
             case 8:
                 this.meshFromPoints(square.topLeft, square.centreTop, square.centreLeft);
@@ -74,15 +80,16 @@ export class MeshGenerator {
     }
 
     meshFromPoints(...points) {
+        this.assignVertices(points)
         // Add points representing triangles
         if (points.length >= 3)
-            this.vertices.push(points[0].position, points[1].position, points[2].position);
+            this.createTriangle(points[0].position, points[1].position, points[2].position);
         if (points.length >= 4)
-            this.vertices.push(points[0].position, points[2].position, points[3].position);
+            this.createTriangle(points[0].position, points[2].position, points[3].position);
         if (points.length >= 5)
-            this.vertices.push(points[0].position, points[3].position, points[4].position);
+            this.createTriangle(points[0].position, points[3].position, points[4].position);
         if (points.length >= 6)
-            this.vertices.push(points[0].position, points[4].position, points[5].position);
+            this.createTriangle(points[0].position, points[4].position, points[5].position);
 
     }
 
@@ -91,6 +98,107 @@ export class MeshGenerator {
             array.push(vertex.x, vertex.y)
             return array
         }, [])
+    }
+
+    createTriangle(a, b, c) {
+        this.vertices.push(a,b,c)
+        var triangle = new Triangle(this.vertexIndices.get(a), this.vertexIndices.get(b), this.vertexIndices.get(c))
+        this.addTriangleToDictionary(triangle.vertexIndexA, triangle)
+        this.addTriangleToDictionary(triangle.vertexIndexB, triangle)
+        this.addTriangleToDictionary(triangle.vertexIndexC, triangle)
+    }
+
+    assignVertices(points) {
+        for (var i=0; i< points.length; i+=1) {
+            //if not exists in map
+            if (!this.vertexIndices.has(points[i].position) ){
+                this.vertexIndices.set(points[i].position, this.vertices2.length)
+                this.vertices2.push(points[i].position)
+            }
+        }
+    }
+
+    addTriangleToDictionary(vertexIndexKey, triangle){
+        if (this.triangleDictionary.has(vertexIndexKey)){
+            var triang = this.triangleDictionary.get(vertexIndexKey)
+            triang.push(triangle)
+            this.triangleDictionary.set(vertexIndexKey, triang)
+        } else {
+            var triangleList = [triangle]
+            this.triangleDictionary.set(vertexIndexKey, triangleList)
+        }
+    }
+
+    //returns array of lists of consecutive vectors of walls of each shape 
+    calculateOutlines() {
+        for ( var vertexIndex = 0; vertexIndex < this.vertices2.length; vertexIndex +=1){
+            if (!this.checkedVertices.includes(vertexIndex)) {
+                var newOutlineVertex = this.getConnectedOutlineVertex(vertexIndex)
+ 
+                if (newOutlineVertex != -1){
+                    this.checkedVertices.push(vertexIndex)
+                    var newOutline=[vertexIndex]
+                    this.outlines.push(newOutline)
+                    this.followOutline(newOutlineVertex, this.outlines.length-1)
+                    this.outlines[this.outlines.length-1].push(vertexIndex)
+                }
+            }
+        }
+        return this.outlinePoints()
+    }
+
+    getConnectedOutlineVertex(vertexIndex){
+        var trianglesContainingVertex = this.triangleDictionary.get(vertexIndex)
+        for (var k=0; k<trianglesContainingVertex.length; k++){
+            for (var i=0; i<3; i+=1){
+                var vertexB = trianglesContainingVertex[k].vertices[i]
+                if (vertexB != vertexIndex && !this.checkedVertices.includes(vertexB)){
+                     if (this.isOutlineEdge(vertexIndex, vertexB)) {
+                        return vertexB
+                    }
+                }
+            }
+        }
+        return -1
+    }
+
+    //checks whether line between A and B is an outline
+    isOutlineEdge(vertexA, vertexB){
+        var trianglesContainingVertexA = this.triangleDictionary.get(vertexA)
+        var sharedTriangleCount = 0
+        for (var i=0; i < trianglesContainingVertexA.length; i++) {
+            if ( trianglesContainingVertexA[i].containsVert(vertexB) ) {
+                sharedTriangleCount+=1
+                if ( sharedTriangleCount > 1) {
+                    break
+                }
+            }
+        }
+        return sharedTriangleCount === 1
+    }
+
+    //translates vector indices into (x,y)-coordinates
+    outlinePoints(){
+        var revDict = new Map()
+        var iterator = this.vertexIndices.entries()
+        for (var val of iterator){
+            revDict.set(val[1], val[0])
+        }
+        var outP = []
+        for(var i=0; i<this.outlines.length; i++){
+            outP.push(this.outlines[i].map(x=>revDict.get(x)))
+        }
+        return outP
+    }
+
+    //recursive function searching for a next vertex of an outline
+    followOutline(vertexIndex, outlineIndex){
+        this.outlines[outlineIndex].push(vertexIndex)
+        this.checkedVertices.push(vertexIndex)
+        var nextVertexIndex = this.getConnectedOutlineVertex(vertexIndex)
+        if (nextVertexIndex!=-1){
+            this.followOutline(nextVertexIndex, outlineIndex)
+        }
     }
 }
 
@@ -153,6 +261,19 @@ class Node {
         this.position = pos
         this.above = { position: new Vec(pos.x, pos.y + squareSize / 2.0, 0) }
         this.right = { position: new Vec(pos.x + squareSize / 2.0, pos.y, 0) }
+    }
+}
+
+class Triangle {
+    constructor(a, b, c){
+        this.vertexIndexA = a
+        this.vertexIndexB = b
+        this.vertexIndexC = c
+        this.vertices = [a, b, c]
+    }
+
+    containsVert(vertexIndex) {
+        return vertexIndex === this.vertexIndexA || vertexIndex === this.vertexIndexB || vertexIndex === this.vertexIndexC
     }
 }
 
