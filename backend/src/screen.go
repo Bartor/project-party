@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-
 // A middleman between the websocket connection for the game screen app and the game.
 type Screen struct {
 	game *Game
