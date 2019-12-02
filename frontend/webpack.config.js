@@ -8,7 +8,8 @@ module.exports = {
     mode: 'development',
     devtool: 'inline-source-map',
     entry: {
-        app: './src/index.ts'
+        game: './src/entrypoints/game.ts',
+        controller: './src/entrypoints/controller.ts'
     },
     output: {
         filename: '[name].bundle.js',
@@ -18,14 +19,25 @@ module.exports = {
         new CleanWebpackPlugin.CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
             title: 'Frontend test',
-            filename: 'index.html',
-            template: './src/index.html'
+            filename: 'game.html',
+            template: './src/index.html',
+            chunks: ['game']
         }),
+        new HtmlWebpackPlugin(({
+            title: 'Controller',
+            filename: 'controller.html',
+            template: './src/controller.html',
+            chunks: ['controller']
+        })),
         new MiniCssExtractPlugin({
-            filename: 'style.css',
-            chunkFilename: '[name].css'
+            filename: '[name].css'
         })
     ],
+    optimization: {
+        splitChunks: {
+            chunks: 'all'
+        }
+    },
     module: {
         rules: [
             {

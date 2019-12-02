@@ -1,6 +1,6 @@
 import {Player} from "../game_objects/player/Player";
 import {Exceptions} from "../shared/enums/Exceptions.enum";
-import {CommunicationInterface} from "../communication/Communication.interface";
+import {GameCommunicationInterface} from "../communication/GameCommunication.interface";
 import {GameMap} from "../game_objects/map/GameMap";
 import {PlayerState} from "../shared/enums/PlayerState.enum";
 import {Round} from "./Round";
@@ -17,7 +17,7 @@ export class Game {
 
     private readonly playerLimit: number;
 
-    constructor(communicationService: CommunicationInterface, playerLimit: number = 8) {
+    constructor(communicationService: GameCommunicationInterface, playerLimit: number = 8) {
         this.playerLimit = playerLimit;
 
         communicationService.roundUpdates().subscribe(update => {

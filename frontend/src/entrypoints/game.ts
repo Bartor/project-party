@@ -1,12 +1,12 @@
-import {Player} from "./scripts/game_objects/player/Player";
+import {Player} from "../scripts/game_objects/player/Player";
 
-import './styles/index';
-import {ProjectParty} from "./scripts/ProjectParty";
-import {Game} from "./scripts/game_flow/Game";
+import '../styles/game.scss';
+import {ProjectParty} from "../scripts/ProjectParty";
+import {Game} from "../scripts/game_flow/Game";
 import {Observable, Subject} from "rxjs";
-import {GameplayUpdate} from "./scripts/shared/interfaces/GameplayUpdate.interface";
-import {RoundState} from "./scripts/shared/interfaces/RoundState.interface";
-import {RotatedPosition} from "./scripts/shared/interfaces/RotatedPosition.interface";
+import {GameplayUpdate} from "../scripts/shared/interfaces/GameplayUpdate.interface";
+import {RoundState} from "../scripts/shared/interfaces/RoundState.interface";
+import {RotatedPosition} from "../scripts/shared/interfaces/RotatedPosition.interface";
 
 const mockRoundSubject = new Subject<RoundState>();
 setTimeout(() => {
