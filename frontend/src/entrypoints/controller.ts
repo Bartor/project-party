@@ -10,7 +10,7 @@ window.addEventListener('touchstart', event => {
 window.addEventListener('load', () => {
     const container = document.querySelector('main');
 
-    const communication = new ControllerCommunication('123.123.123.123', 3000, 300);
+    const communication = new ControllerCommunication('123.123.123.123', 3000, 20);
     const controller = new Controller(container, communication);
     controller.drawLoop();
 });

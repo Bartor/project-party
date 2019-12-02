@@ -31,6 +31,8 @@ export class Controller {
             x: this.canvas.width - this.radius,
             y: this.canvas.height / 2
         };
+        this.centerShootTouch = {...this.centerShoot};
+        this.centerMoveTouch = {...this.centerMove};
 
         this.canvas.addEventListener('pointerdown', event => {
             let idx = this.pointers.findIndex(e => e.pointerId === event.pointerId);
@@ -99,7 +101,18 @@ export class Controller {
     private communicate() {
         let moveDist = this.dist(this.centerMove, this.centerMoveTouch);
         if (moveDist > 0) {
+            let angle;
             //todo find the angle
+
+            let normalizedMoveDist = moveDist/this.radius > 1 ? 1 : moveDist/this.radius;
+            // this.communication.move(angle, normalizedMoveDist);
+            this.communication.move(69, 0.2137);
+        }
+        let shootDist = this.dist(this.centerShoot, this.centerShootTouch);
+        if (shootDist > this.radius/2) {
+            let angle;
+            // this.communication.shoot(angle);
+            this.communication.shoot(69);
         }
     }
 
@@ -109,14 +122,20 @@ export class Controller {
 
         this.context.beginPath();
         this.context.fillStyle = '#202020';
-        this.context.arc(this.centerMove.x, this.centerMove.y, this.radius, 0, 2 * Math.PI);
-        this.context.arc(this.centerShoot.x, this.centerShoot.y, this.radius, 0, 2 * Math.PI);
+        this.context.arc(this.centerMove.x, this.centerMove.y, this.radius, 0, 2 * Math.PI); // moving circle
+        this.context.arc(this.centerShoot.x, this.centerShoot.y, this.radius, 0, 2 * Math.PI); //shooting outer circle
+        this.context.fill();
+
+        this.context.beginPath();
+        this.context.fillStyle = '#181818';
+        this.context.arc(this.centerShoot.x, this.centerShoot.y, this.radius/2, 0, 2 * Math.PI); // shooting inner
+        // circle
         this.context.fill();
 
         this.context.beginPath();
         this.context.fillStyle = '#323232';
-        this.context.arc(this.centerMoveTouch.x, this.centerMoveTouch.y, this.radius/4, 0, 2 * Math.PI);
-        this.context.arc(this.centerShootTouch.x, this.centerShootTouch.y, this.radius/4, 0, 2 * Math.PI);
+        this.context.arc(this.centerMoveTouch.x, this.centerMoveTouch.y, this.radius/4, 0, 2 * Math.PI); // moving pad
+        this.context.arc(this.centerShootTouch.x, this.centerShootTouch.y, this.radius/4, 0, 2 * Math.PI); // shooting pad
         this.context.fill();
 
         requestAnimationFrame(() => this.drawLoop());

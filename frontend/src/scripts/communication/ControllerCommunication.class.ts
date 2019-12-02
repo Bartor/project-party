@@ -13,7 +13,7 @@ export class ControllerCommunication {
         this.websocket = new WebSocketSubject(`${address}:${port}`);
         this.ticker = setInterval(() => {
             this.sendRecentData();
-        }, tickrate);
+        }, 1000/tickrate);
     }
 
     private createDataPacket(): string {
@@ -25,6 +25,7 @@ export class ControllerCommunication {
 
     private sendRecentData() {
         let data = this.createDataPacket();
+        console.log(`Sending ${data}`);
         this.websocket.next(data);
         this.recentAction.move.speed = -1;
         this.recentAction.move.direction = -1;
