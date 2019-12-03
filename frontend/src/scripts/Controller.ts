@@ -1,4 +1,5 @@
 import {ControllerCommunication} from "./communication/ControllerCommunication.class";
+import {Point} from "./shared/interfaces/Point.interface";
 
 export class Controller {
     private readonly canvas: HTMLCanvasElement;
@@ -101,18 +102,14 @@ export class Controller {
     private communicate() {
         let moveDist = this.dist(this.centerMove, this.centerMoveTouch);
         if (moveDist > 0) {
-            let angle;
-            //todo find the angle
-
+            let angle = this.angle(this.centerMove, this.centerMoveTouch);
             let normalizedMoveDist = moveDist/this.radius > 1 ? 1 : moveDist/this.radius;
-            // this.communication.move(angle, normalizedMoveDist);
-            this.communication.move(69, 0.2137);
+            this.communication.move(angle, normalizedMoveDist);
         }
         let shootDist = this.dist(this.centerShoot, this.centerShootTouch);
         if (shootDist > this.radius/2) {
-            let angle;
-            // this.communication.shoot(angle);
-            this.communication.shoot(69);
+            let angle = this.angle(this.centerShoot, this.centerShootTouch);
+            this.communication.shoot(angle);
         }
     }
 
@@ -141,7 +138,28 @@ export class Controller {
         requestAnimationFrame(() => this.drawLoop());
     }
 
-    private dist(a: { x: number, y: number }, b: { x: number, y: number }) {
+    private dist(a: Point, b: Point) {
         return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+    }
+
+    private angle(pivot: Point, point: Point) {
+        let sin = Math.abs(point.y - pivot.y)/this.dist(pivot, point);
+        let calculatedAngle: number;
+
+        if (pivot.x < point.x) {
+            if (pivot.y < point.y) {
+                calculatedAngle = 2*Math.PI - Math.asin(sin);
+            } else {
+                calculatedAngle = Math.asin(sin);
+            }
+        } else {
+            if (pivot.y < point.y) {
+                calculatedAngle = Math.PI + Math.asin(sin);
+            } else {
+                calculatedAngle = Math.PI - Math.asin(sin);
+            }
+        }
+
+        return Math.round(calculatedAngle*180/Math.PI);
     }
 }
