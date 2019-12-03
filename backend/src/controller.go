@@ -13,9 +13,7 @@ import (
 // A middleman between the websocket connection of controller app and the game.
 type Controller struct {
 	game *Game
-
 	conn *websocket.Conn
-
 }
 
 // readPump pumps messages from the websocket connection to the game.
@@ -40,7 +38,7 @@ func (c *Controller) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.game.controllerMessages <- message
+		c.game.controllerMessages <- &ControllerMessage{c, message}
 	}
 }
 

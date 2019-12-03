@@ -2,15 +2,17 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Game struct {
 	controllers map[*Controller]bool
 	screen      *Screen
 
-	controllerMessages chan []byte
+	controllerMessages chan *ControllerMessage
 
 	register   chan *Controller
 	unregister chan *Controller
@@ -36,10 +38,15 @@ type Shot struct {
 	angle int
 }
 
+type ControllerMessage struct {
+	c       *Controller
+	message []byte
+}
+
 func newGame() *Game {
 	return &Game{
 		controllers:        make(map[*Controller]bool),
-		controllerMessages: make(chan []byte),
+		controllerMessages: make(chan *ControllerMessage),
 		register:           make(chan *Controller),
 		unregister:         make(chan *Controller),
 		registerScreen:     make(chan *Screen),
@@ -50,6 +57,7 @@ func newGame() *Game {
 }
 
 func (g *Game) run() {
+	go processEvents(g)
 	for {
 		select {
 		case controller := <-g.register:
@@ -72,23 +80,21 @@ func (g *Game) run() {
 			}
 		case <-g.unregisterScreen:
 			g.screen = nil
-		case message := <-g.controllerMessages:
-			shotAngle, moveSpeed, moveAngle := processPlayerMessage(string(message))
-
+		case cMessage := <-g.controllerMessages:
+			shotAngle, moveSpeed, moveAngle := processPlayerMessage(string(cMessage.message))
+			currPlayer := g.players[cMessage.c]
 			if shotAngle != -1 {
 				fmt.Printf("Player shooting at angle %d\n", shotAngle)
+				currShot := &Shot{currPlayer, int(float64(currPlayer.xPos) + math.Cos(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed), int(float64(currPlayer.yPos) + math.Sin(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed), shotAngle}
+				g.shots = append(g.shots, currShot)
 			}
 
 			if moveSpeed >= 0 {
 				fmt.Printf("Player moving at speed %f at angle %d\n", moveSpeed, moveAngle)
+				currPlayer.xPos = int(moveSpeed*globalMoveSpeed*math.Cos(float64(moveAngle)*math.Pi/180.0)) + currPlayer.xPos
+				currPlayer.yPos = int(moveSpeed*globalMoveSpeed*math.Sin(float64(moveAngle)*math.Pi/180.0)) + currPlayer.yPos
+				currPlayer.angle = moveAngle
 			}
-
-			// DEFER RESULTS TO QUEUE THAT PROCESSES GAME UPDATES
-			// select {
-			// case g.screen.input <- message:
-			// default:
-			// 	close(g.screen.input)
-			// }
 		}
 	}
 }
@@ -134,4 +140,19 @@ func processPlayerMessage(message string) (int, float64, int) {
 
 	fmt.Println("Wrong message format")
 	return -1, -1, -1
+}
+
+func processEvents(g *Game) {
+	for range time.Tick(time.Nanosecond * 20000000) {
+		g.screen.input <- []byte("BEGIN")
+		for i := range g.players {
+			currPlayer := g.players[i]
+			g.screen.input <- []byte(fmt.Sprintf("PlayerData/%d/%d/%d/%d", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle))
+		}
+		for i := range g.shots {
+			currShot := g.shots[i]
+			g.screen.input <- []byte(fmt.Sprintf("ShotData/%d/%d/%d", currShot.xPos, currShot.yPos, currShot.angle))
+		}
+		g.screen.input <- []byte("END")
+	}
 }
