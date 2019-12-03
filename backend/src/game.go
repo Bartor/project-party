@@ -90,7 +90,7 @@ func (g *Game) run() {
 				fmt.Printf("Player shooting at angle %d\n", shotAngle)
 				currShot := &Shot{g.shotsFired + 1, currPlayer, int(float64(currPlayer.xPos) + math.Cos(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed), int(float64(currPlayer.yPos) + math.Sin(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed), shotAngle}
 				g.shots = append(g.shots, currShot)
-				g.shotsFired += 1
+				g.shotsFired++
 			}
 
 			if moveSpeed >= 0 {
@@ -117,12 +117,14 @@ func processPlayerMessage(message string) (int, float64, int) {
 		var moveAngle int
 		var shotAngle int
 		var moveSpeed float64
+		moveAngle = -1
+		shotAngle = -1
+		moveSpeed = -1
+
 		if shotString != "" {
 			shotAngleTemp, shotAngleError := strconv.Atoi(shotString)
 			if shotAngleError == nil {
 				shotAngle = shotAngleTemp
-			} else {
-				shotAngle = -1
 			}
 		}
 
@@ -133,12 +135,10 @@ func processPlayerMessage(message string) (int, float64, int) {
 			if moveSpeedErr == nil && moveAngleErr == nil {
 				moveSpeed = moveSpeedTemp
 				moveAngle = moveAngleTemp
-			} else {
-				moveSpeed = -1
-				moveAngle = -1
 			}
 		}
 
+		// fmt.Printf("DEBUG: %d/%d/%d\n", shotAngle, moveSpeed, moveAngle)
 		return shotAngle, moveSpeed, moveAngle
 	}
 
@@ -147,7 +147,7 @@ func processPlayerMessage(message string) (int, float64, int) {
 }
 
 func processEvents(g *Game) {
-	for range time.Tick(time.Nanosecond * 20000000) {
+	for range time.Tick(time.Nanosecond * 100000000) {
 		if g.screen != nil {
 			updateString := ""
 			if len(g.players) > 0 {
