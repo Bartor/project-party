@@ -1,11 +1,28 @@
-export function createArray(length) {
-    var arr = new Array(length || 0),
-        i = length;
-
-    if (arguments.length > 1) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        while(i--) arr[length-1 - i] = createArray.apply(this, args);
-    }
-
-    return arr;
+export function Queue() {
+    this._oldestIndex = 1;
+    this._newestIndex = 1;
+    this._storage = {};
 }
+
+Queue.prototype.size = function() {
+    return this._newestIndex - this._oldestIndex;
+};
+
+Queue.prototype.enqueue = function(data) {
+    this._storage[this._newestIndex] = data;
+    this._newestIndex++;
+};
+
+Queue.prototype.dequeue = function() {
+    var oldestIndex = this._oldestIndex,
+        newestIndex = this._newestIndex,
+        deletedData;
+
+    if (oldestIndex !== newestIndex) {
+        deletedData = this._storage[oldestIndex];
+        delete this._storage[oldestIndex];
+        this._oldestIndex++;
+
+        return deletedData;
+    }
+};

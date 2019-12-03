@@ -1,4 +1,3 @@
-import { createArray } from './utils.js'
 
 export class MeshGenerator {
     constructor(map, squareSize) {
@@ -186,7 +185,10 @@ export class MeshGenerator {
         }
         var outP = []
         for(var i=0; i<this.outlines.length; i++){
-            outP.push(this.outlines[i].map(x=>revDict.get(x)))
+            outP.push(this.outlines[i].map(x=> {
+                var p = revDict.get(x)
+                return { x: p.x, y: p.y }
+            }))
         }
         return outP
     }
@@ -209,7 +211,7 @@ class SquareGrid {
         var mapWidth = nodeCountX * squareSize;
         var mapHeight = nodeCountY * squareSize;
 
-        var controlNodes = createArray(nodeCountX, nodeCountY);
+        var controlNodes = [...Array(nodeCountX)].map(x => Array(nodeCountY).fill(null)) 
 
         // Convert every point from the original map and convert it to a node with an appropriate position
         for (var x = 0; x < nodeCountX; x++) {
@@ -220,7 +222,7 @@ class SquareGrid {
         }
 
         // Convert such array of control nodes to an array made from squares
-        this.squares = createArray(nodeCountX - 1, nodeCountY - 1);
+        this.squares = [...Array(nodeCountX - 1)].map(x => Array(nodeCountY - 1).fill(null))
         for (var x = 0; x < nodeCountX - 1; x++) {
             for (var y = 0; y < nodeCountY - 1; y++) {
                 this.squares[x][y] = new Square(controlNodes[x][y + 1], controlNodes[x + 1][y + 1], controlNodes[x + 1][y], controlNodes[x][y]);
