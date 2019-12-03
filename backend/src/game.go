@@ -20,8 +20,9 @@ type Game struct {
 	registerScreen   chan *Screen
 	unregisterScreen chan bool
 
-	players map[*Controller]*Player
-	shots   []*Shot
+	players    map[*Controller]*Player
+	shots      []*Shot
+	shotsFired uint64
 }
 
 type Player struct {
@@ -32,6 +33,7 @@ type Player struct {
 }
 
 type Shot struct {
+	id    uint64
 	owner *Player
 	xPos  int
 	yPos  int
@@ -53,6 +55,7 @@ func newGame() *Game {
 		unregisterScreen:   make(chan bool),
 		players:            make(map[*Controller]*Player),
 		shots:              make([]*Shot, 0),
+		shotsFired:         0,
 	}
 }
 
@@ -85,8 +88,9 @@ func (g *Game) run() {
 			currPlayer := g.players[cMessage.c]
 			if shotAngle != -1 {
 				fmt.Printf("Player shooting at angle %d\n", shotAngle)
-				currShot := &Shot{currPlayer, int(float64(currPlayer.xPos) + math.Cos(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed), int(float64(currPlayer.yPos) + math.Sin(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed), shotAngle}
+				currShot := &Shot{g.shotsFired + 1, currPlayer, int(float64(currPlayer.xPos) + math.Cos(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed), int(float64(currPlayer.yPos) + math.Sin(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed), shotAngle}
 				g.shots = append(g.shots, currShot)
+				g.shotsFired += 1
 			}
 
 			if moveSpeed >= 0 {
@@ -144,15 +148,25 @@ func processPlayerMessage(message string) (int, float64, int) {
 
 func processEvents(g *Game) {
 	for range time.Tick(time.Nanosecond * 20000000) {
-		g.screen.input <- []byte("BEGIN")
-		for i := range g.players {
-			currPlayer := g.players[i]
-			g.screen.input <- []byte(fmt.Sprintf("PlayerData/%d/%d/%d/%d", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle))
+		if g.screen != nil {
+			updateString := ""
+			if len(g.players) > 0 {
+				for i := range g.players {
+					currPlayer := g.players[i]
+					updateString += fmt.Sprintf("%d/%d/%d/%d,", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle)
+				}
+				updateString = updateString[:len(updateString)-1]
+			}
+			updateString += ":"
+			if len(g.shots) > 0 {
+				for i := range g.shots {
+					currShot := g.shots[i]
+					updateString += fmt.Sprintf("%d/%d/%d/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
+				}
+				updateString = updateString[:len(updateString)-1]
+			}
+			fmt.Println(updateString)
+			g.screen.input <- []byte(updateString)
 		}
-		for i := range g.shots {
-			currShot := g.shots[i]
-			g.screen.input <- []byte(fmt.Sprintf("ShotData/%d/%d/%d", currShot.xPos, currShot.yPos, currShot.angle))
-		}
-		g.screen.input <- []byte("END")
 	}
 }
