@@ -11,8 +11,17 @@ export class ProjectParty {
         container.appendChild(this.app.view);
 
         game.graphicsUpdates.subscribe(graphics => {
-            this.app.stage.removeChild(...this.app.stage.children);
-            this.app.stage.addChild(...graphics);
+            for (let child of this.app.stage.children) {
+                if (!graphics.includes(child)) {
+                    this.app.stage.removeChild(child);
+                }
+            }
+
+            for (let obj of graphics) {
+                if (!this.app.stage.children.includes(obj)) {
+                    this.app.stage.addChild(obj);
+                }
+            }
         });
     }
 }

@@ -1,12 +1,10 @@
-import Graphics = PIXI.Graphics;
-import {Player} from "./Player";
+import {MovableGraphics} from "../../shared/abstract/MovableGraphics.asbstract.class";
 
-export class Projectile {
-    private graphics = new Graphics();
-    private shooter: Player;
+export class Projectile extends MovableGraphics {
+    public marked: boolean = true;
 
-    constructor(shooter: Player, size: number) {
-        this.shooter = shooter;
+    constructor(size: number) {
+        super();
 
         this.graphics.beginFill(0xffffff, 0.5);
         this.graphics.drawRect(0, 0, size/4, size);

@@ -1,14 +1,12 @@
-import {Graphics} from "pixi.js";
-import DisplayObject = PIXI.DisplayObject;
 import {PlayerState} from "../../shared/enums/PlayerState.enum";
-import {RotatedPosition} from "../../shared/interfaces/RotatedPosition.interface";
+import {MovableGraphics} from "../../shared/abstract/MovableGraphics.asbstract.class";
 
-export class Player {
+export class Player extends MovableGraphics {
     public state = PlayerState.ALIVE;
-    private graphics = new Graphics();
     private color: number;
 
     constructor(color: number, size: number) {
+        super();
         this.color = color;
 
         this.graphics.beginFill(0xffffff);
@@ -22,16 +20,5 @@ export class Player {
         this.graphics.endFill();
 
         this.graphics.rotation = Math.PI / 4;
-    }
-
-    toRotatedPosition(position: RotatedPosition): Player {
-        this.graphics.x = position.position.x;
-        this.graphics.y = position.position.y;
-        this.graphics.rotation = position.rotation + Math.PI / 4;
-        return this;
-    }
-
-    getGraphics(): DisplayObject {
-        return this.graphics;
     }
 }

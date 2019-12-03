@@ -1,6 +1,6 @@
 import {Player} from "../game_objects/player/Player";
 import {Exceptions} from "../shared/enums/Exceptions.enum";
-import {GameCommunicationInterface} from "../communication/GameCommunication.interface";
+import {GameCommunicationInterface} from "../shared/interfaces/GameCommunication.interface";
 import {GameMap} from "../game_objects/map/GameMap";
 import {PlayerState} from "../shared/enums/PlayerState.enum";
 import {Round} from "./Round";
@@ -20,15 +20,19 @@ export class Game {
     constructor(communicationService: GameCommunicationInterface, playerLimit: number = 8) {
         this.playerLimit = playerLimit;
 
-        communicationService.roundUpdates().subscribe(update => {
+        communicationService.roundUpdates.subscribe(update => {
             this.players.forEach(player => player.state = PlayerState.ALIVE);
             update.playerPositions.forEach((position, name) => {
                 this.players.get(name).toRotatedPosition(position);
             });
 
             const map = new GameMap(update.map);
-            this.graphicsSubject.next([...map.getGraphics(), ...[...this.players.values()].map(player => player.getGraphics())]);
-            this.round = new Round(this.players, map, communicationService.gameStateUpdates())
+            const normalGraphics: DisplayObject[] = [...map.getGraphics(), ...[...this.players.values()].map(p => p.getGraphics())];
+            this.graphicsSubject.next(normalGraphics);
+            this.round = new Round(this.players, map, communicationService.gameStateUpdates);
+            this.round.projectileUpdates.subscribe(update => {
+                this.graphicsSubject.next([...normalGraphics, ...update]); // wow so smart xDDDDD
+            });
         });
     }
 

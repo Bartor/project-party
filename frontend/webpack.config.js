@@ -33,11 +33,6 @@ module.exports = {
             filename: '[name].css'
         })
     ],
-    optimization: {
-        splitChunks: {
-            chunks: 'all'
-        }
-    },
     module: {
         rules: [
             {

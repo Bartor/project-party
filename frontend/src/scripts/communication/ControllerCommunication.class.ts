@@ -9,27 +9,35 @@ export class ControllerCommunication {
         shoot: {direction: -1}
     };
 
-    constructor(address: string, port: number, private tickrate: number) {
-        this.websocket = new WebSocketSubject(`${address}:${port}`);
+    constructor(address: string, private tickrate: number) {
+        this.websocket = new WebSocketSubject({
+            url: address,
+            serializer: value => value
+        });
+        this.websocket.subscribe();
         this.ticker = setInterval(() => {
-            this.sendRecentData();
+            this.sendAndReset();
         }, 1000/tickrate);
     }
 
     private createDataPacket(): string {
+        if (this.recentAction.move.speed === -1 && this.recentAction.shoot.direction === -1) return '';
+
         let moveString = this.recentAction.move.speed !== -1 ? `${this.recentAction.move.speed}:${this.recentAction.move.direction}` : '';
         let shootString = this.recentAction.shoot.direction !== -1 ? this.recentAction.shoot.direction.toString() : '';
         let timestamp = Date.now().toString();
         return `${timestamp}/${moveString}/${shootString}`;
     }
 
-    private sendRecentData() {
-        let data = this.createDataPacket();
-        console.log(`Sending ${data}`);
-        this.websocket.next(data);
-        this.recentAction.move.speed = -1;
-        this.recentAction.move.direction = -1;
-        this.recentAction.shoot.direction = -1;
+    private sendAndReset() {
+        const packet = this.createDataPacket();
+        if (packet !== '') {
+            console.log('Sending...', packet);
+            this.websocket.next(packet);
+            this.recentAction.move.speed = -1;
+            this.recentAction.move.direction = -1;
+            this.recentAction.shoot.direction = -1;
+        }
     }
 
     public move(direction: number, speed: number) {
