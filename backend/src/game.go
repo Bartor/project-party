@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -29,21 +28,6 @@ type Game struct {
 	players    map[*Controller]*Player
 	shots      []*Shot
 	shotsFired uint64
-}
-
-type Player struct {
-	id    int
-	xPos  int
-	yPos  int
-	angle int
-}
-
-type Shot struct {
-	id    uint64
-	owner *Player
-	xPos  int
-	yPos  int
-	angle int
 }
 
 type ControllerMessage struct {
@@ -87,7 +71,7 @@ func (g *Game) run() {
 		select {
 		case controller := <-g.registerController:
 			g.controllers[controller] = true
-			newPlayer := &Player{len(g.players), 0, 0, 0}
+			newPlayer := &Player{g, len(g.players), 0, 0, 0}
 			g.players[controller] = newPlayer
 			select {
 			case g.screen.input <- []byte(fmt.Sprintf("NewPlayer/%d/%d/%d/%d", newPlayer.id, newPlayer.xPos, newPlayer.yPos, newPlayer.angle)):
@@ -116,19 +100,8 @@ func (g *Game) run() {
 		case cMessage := <-g.controllerMessages:
 			shotAngle, moveSpeed, moveAngle := processPlayerMessage(string(cMessage.message))
 			currPlayer := g.players[cMessage.c]
-			if shotAngle != -1 {
-				fmt.Printf("Player shooting at angle %d\n", shotAngle)
-				currShot := &Shot{g.shotsFired + 1, currPlayer, int(float64(currPlayer.xPos) + math.Cos(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed), int(float64(currPlayer.yPos) + math.Sin(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed), shotAngle}
-				g.shots = append(g.shots, currShot)
-				g.shotsFired++
-			}
-
-			if moveSpeed >= 0 {
-				fmt.Printf("Player moving at speed %f at angle %d\n", moveSpeed, moveAngle)
-				currPlayer.xPos = int(moveSpeed*globalMoveSpeed*math.Cos(float64(moveAngle)*math.Pi/180.0)) + currPlayer.xPos
-				currPlayer.yPos = int(moveSpeed*globalMoveSpeed*math.Sin(float64(moveAngle)*math.Pi/180.0)) + currPlayer.yPos
-				currPlayer.angle = moveAngle
-			}
+			currPlayer.move(moveSpeed, moveAngle)
+			currPlayer.shoot(shotAngle)
 		}
 	}
 }
