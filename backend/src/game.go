@@ -13,14 +13,18 @@ type Game struct {
 	id	uint64
 	controllers map[*Controller]bool
 	screen      *Screen
+	info				*GameInfo
 
-	controllerMessages chan *ControllerMessage
+	controllerMessages 		chan *ControllerMessage
 
-	register   chan *Controller
-	unregister chan *Controller
+	registerController   	chan *Controller
+	unregisterController 	chan *Controller
 
 	registerScreen   chan *Screen
 	unregisterScreen chan bool
+
+	registerGameInfo   chan *GameInfo
+	unregisterGameInfo chan bool
 
 	players    map[*Controller]*Player
 	shots      []*Shot
@@ -52,16 +56,18 @@ func newGame() *Game {
 	currentId++
 
 	return &Game{
-		id:									newId,
-		controllers:        make(map[*Controller]bool),
-		controllerMessages: make(chan *ControllerMessage),
-		register:           make(chan *Controller),
-		unregister:         make(chan *Controller),
-		registerScreen:     make(chan *Screen),
-		unregisterScreen:   make(chan bool),
-		players:            make(map[*Controller]*Player),
-		shots:              make([]*Shot, 0),
-		shotsFired:         0,
+		id:										newId,
+		controllers:        	make(map[*Controller]bool),
+		controllerMessages: 	make(chan *ControllerMessage),
+		registerController: 	make(chan *Controller),
+		unregisterController: make(chan *Controller),
+		registerScreen:     	make(chan *Screen),
+		unregisterScreen:   	make(chan bool),
+		registerGameInfo:     make(chan *GameInfo),
+		unregisterGameInfo:   make(chan bool),
+		players:            	make(map[*Controller]*Player),
+		shots:              	make([]*Shot, 0),
+		shotsFired:         	0,
 	}
 }
 
@@ -79,7 +85,7 @@ func (g *Game) run() {
 	go processEvents(g)
 	for {
 		select {
-		case controller := <-g.register:
+		case controller := <-g.registerController:
 			g.controllers[controller] = true
 			newPlayer := &Player{len(g.players), 0, 0, 0}
 			g.players[controller] = newPlayer
@@ -89,7 +95,7 @@ func (g *Game) run() {
 			default:
 				fmt.Println("huh")
 			}
-		case controller := <-g.unregister:
+		case controller := <-g.unregisterController:
 			if _, ok := g.controllers[controller]; ok {
 				delete(g.controllers, controller)
 			}
@@ -99,6 +105,14 @@ func (g *Game) run() {
 			}
 		case <-g.unregisterScreen:
 			g.screen = nil
+		case info := <-g.registerGameInfo:
+			if g.info == nil {
+				g.info = info
+
+				g.info.input <- []byte(fmt.Sprintf("NewGame/%d", g.id))
+			}
+		case <-g.unregisterGameInfo:
+			g.info = nil
 		case cMessage := <-g.controllerMessages:
 			shotAngle, moveSpeed, moveAngle := processPlayerMessage(string(cMessage.message))
 			currPlayer := g.players[cMessage.c]

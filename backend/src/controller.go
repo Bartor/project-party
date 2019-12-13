@@ -23,7 +23,7 @@ type Controller struct {
 // reads from this goroutine.
 func (c *Controller) readPump() {
 	defer func() {
-		c.game.unregister <- c
+		c.game.unregisterController <- c
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -49,7 +49,7 @@ func serveControllerWs(game *Game, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	controller := &Controller{game: game, conn: conn}
-	controller.game.register <- controller
+	controller.game.registerController <- controller
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
