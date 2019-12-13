@@ -7,8 +7,10 @@ import (
 	"strings"
 	"time"
 )
+var currentId uint64 = 0
 
 type Game struct {
+	id	uint64
 	controllers map[*Controller]bool
 	screen      *Screen
 
@@ -46,7 +48,11 @@ type ControllerMessage struct {
 }
 
 func newGame() *Game {
+	newId := currentId
+	currentId++
+
 	return &Game{
+		id:									newId,
 		controllers:        make(map[*Controller]bool),
 		controllerMessages: make(chan *ControllerMessage),
 		register:           make(chan *Controller),
@@ -59,6 +65,16 @@ func newGame() *Game {
 	}
 }
 
+func findGameById(id uint64, games []*Game) *Game {
+	for _, game := range games {
+		if game.id == id {
+			return game
+		}
+	}
+
+	return nil
+}
+
 func (g *Game) run() {
 	go processEvents(g)
 	for {
@@ -69,7 +85,7 @@ func (g *Game) run() {
 			g.players[controller] = newPlayer
 			select {
 			case g.screen.input <- []byte(fmt.Sprintf("NewPlayer/%d/%d/%d/%d", newPlayer.id, newPlayer.xPos, newPlayer.yPos, newPlayer.angle)):
-				fmt.Println("Sent information regarding new player of id %d", newPlayer.id)
+				fmt.Println("Sent information regarding new player of id ", newPlayer.id)
 			default:
 				fmt.Println("huh")
 			}
