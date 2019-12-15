@@ -1,4 +1,4 @@
-export function Queue() {
+function Queue() {
     this._oldestIndex = 1;
     this._newestIndex = 1;
     this._storage = {};
@@ -26,3 +26,8 @@ Queue.prototype.dequeue = function() {
         return deletedData;
     }
 };
+
+
+module.exports = {
+    Queue
+}

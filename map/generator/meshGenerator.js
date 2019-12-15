@@ -1,5 +1,4 @@
-
-export class MeshGenerator {
+class MeshGenerator {
     constructor(map, squareSize) {
         this.squareGrid = new SquareGrid(map, squareSize)
         this.vertices = []
@@ -279,10 +278,12 @@ class Triangle {
     }
 }
 
-export class Vec {
+class Vec {
     constructor(x, y, z) {
         this.x = x
         this.y = y
         this.z = z
     }
 }
+
+module.exports = MeshGenerator

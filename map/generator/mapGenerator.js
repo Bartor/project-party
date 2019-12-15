@@ -1,10 +1,10 @@
-import { Queue } from './utils.js'
+const { Queue } = require('./utils.js')
 
-export class MapGenerator {
+class MapGenerator {
     constructor(width, height) {
         this.width = width
         this.height = height
-        this.map = [...Array(width)].map(x => Array(width).fill(0))
+        this.map = [...Array(width)].map(x => Array(height).fill(0))
         this.randomFillPercent = 50
     }
 
@@ -395,3 +395,5 @@ function connectRooms(roomA, roomB) {
     roomA.connectedRooms.push(roomB)
     roomB.connectedRooms.push(roomA)
 }
+
+module.exports = MapGenerator
