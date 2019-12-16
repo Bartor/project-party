@@ -57,7 +57,11 @@ func main() {
 	})
 
 	http.HandleFunc("/gameInfoWs", func(w http.ResponseWriter, r *http.Request) {
-		game := newGame()
+		game, err := newGame()
+		if err != nil {
+			return
+		}
+
 		games = append(games, game)
 		go game.run()
 		fmt.Println("created game with id ", game.id)
