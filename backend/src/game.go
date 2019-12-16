@@ -40,7 +40,7 @@ type ControllerMessage struct {
 }
 
 func loadMap() (Map, error) {
-	response, err := http.Get("http://host.docker.internal:3000/generate?width=100&height=100")
+	response, err := http.Get("http://map:3000/generate?width=100&height=100")
 	if err != nil {
 		return Map{}, err
 	}

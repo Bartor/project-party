@@ -1,6 +1,12 @@
-version: "3.7"
+version: "3.5"
 services:
   backend:
     build: "backend"
     ports: 
       - 8080:8080
+  map:
+    build: "map"
+  frontend:
+    build: "frontend"
+    ports:
+      - 80:80
