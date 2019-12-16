@@ -21,7 +21,7 @@ app.get('/generate', (req, res) => {
         var mesh = new MeshGenerator(map.map, 2.0 / map.width)
         var outlines = mesh.calculateOutlines()
         
-        var ratio = width / height
+        var ratio = map.width / map.height
         outlines.map(array => {
             array.map(vertex => {
                 vertex.y *= ratio
