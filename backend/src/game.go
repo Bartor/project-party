@@ -2,22 +2,25 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 )
+
 var currentId uint64 = 0
 
 type Game struct {
-	id	uint64
+	id          uint64
 	controllers map[*Controller]bool
 	screen      *Screen
-	info				*GameInfo
+	info        *GameInfo
 
-	controllerMessages 		chan *ControllerMessage
+	controllerMessages chan *ControllerMessage
 
-	registerController   	chan *Controller
-	unregisterController 	chan *Controller
+	registerController   chan *Controller
+	unregisterController chan *Controller
 
 	registerScreen   chan *Screen
 	unregisterScreen chan bool
@@ -28,6 +31,7 @@ type Game struct {
 	players    map[*Controller]*Player
 	shots      []*Shot
 	shotsFired uint64
+	mapData    Map
 }
 
 type ControllerMessage struct {
@@ -40,18 +44,18 @@ func newGame() *Game {
 	currentId++
 
 	return &Game{
-		id:										newId,
-		controllers:        	make(map[*Controller]bool),
-		controllerMessages: 	make(chan *ControllerMessage),
-		registerController: 	make(chan *Controller),
+		id:                   newId,
+		controllers:          make(map[*Controller]bool),
+		controllerMessages:   make(chan *ControllerMessage),
+		registerController:   make(chan *Controller),
 		unregisterController: make(chan *Controller),
-		registerScreen:     	make(chan *Screen),
-		unregisterScreen:   	make(chan bool),
+		registerScreen:       make(chan *Screen),
+		unregisterScreen:     make(chan bool),
 		registerGameInfo:     make(chan *GameInfo),
 		unregisterGameInfo:   make(chan bool),
-		players:            	make(map[*Controller]*Player),
-		shots:              	make([]*Shot, 0),
-		shotsFired:         	0,
+		players:              make(map[*Controller]*Player),
+		shots:                make([]*Shot, 0),
+		shotsFired:           0,
 	}
 }
 
@@ -66,42 +70,56 @@ func findGameById(id uint64, games []*Game) *Game {
 }
 
 func (g *Game) run() {
-	go processEvents(g)
-	go processGameEvents(g)
-	for {
-		select {
-		case controller := <-g.registerController:
-			g.controllers[controller] = true
-			newPlayer := &Player{g, len(g.players), 0, 0, 0, make([]*PlayerEvent, 0)}
-			g.players[controller] = newPlayer
+	response, err := http.Get("http://host.docker.internal:3000/generate?width=100&height=100")
+	if err != nil {
+		fmt.Printf("The HTTP request to grab map data failed with error %s\n", err)
+	} else {
+		data, _ := ioutil.ReadAll(response.Body)
+		g.mapData = createMapFromJson(data)
+		go processEvents(g)
+		go processGameEvents(g)
+		for {
 			select {
-			case g.screen.input <- []byte(fmt.Sprintf("NewPlayer/%d/%d/%d/%d", newPlayer.id, newPlayer.xPos, newPlayer.yPos, newPlayer.angle)):
-				fmt.Println("Sent information regarding new player of id ", newPlayer.id)
-			default:
-				fmt.Println("huh")
+			case controller := <-g.registerController:
+				g.controllers[controller] = true
+				newPlayer := &Player{g, len(g.players), 0, 0, 0, make([]*PlayerEvent, 0)}
+				g.players[controller] = newPlayer
+				select {
+				case g.info.input <- []byte(fmt.Sprintf("NewPlayer/%d/%d/%d/%d", newPlayer.id, newPlayer.xPos, newPlayer.yPos, newPlayer.angle)):
+					fmt.Println("Sent information regarding new player of id ", newPlayer.id)
+				default:
+					fmt.Println("huh")
+				}
+			case controller := <-g.unregisterController:
+				if _, ok := g.controllers[controller]; ok {
+					delete(g.controllers, controller)
+				}
+			case screen := <-g.registerScreen:
+				if g.screen == nil {
+					g.screen = screen
+				}
+				select {
+				case g.info.input <- []byte(fmt.Sprintf("NewScreen")):
+					fmt.Println("Sent information regarding new screen")
+				default:
+					fmt.Println("huh")
+				}
+			case <-g.unregisterScreen:
+				g.screen = nil
+			case info := <-g.registerGameInfo:
+				if g.info == nil {
+					g.info = info
+					messageToSend := []byte(fmt.Sprintf("NewGame/%d/", g.id))
+					messageToSend = append(messageToSend, createJsonFromMap(g.mapData)...)
+					g.info.input <- messageToSend
+				}
+			case <-g.unregisterGameInfo:
+				g.info = nil
+			case cMessage := <-g.controllerMessages:
+				shotAngle, moveSpeed, moveAngle := processPlayerMessage(string(cMessage.message))
+				currPlayer := g.players[cMessage.c]
+				currPlayer.queueEvent(moveSpeed, moveAngle, shotAngle)
 			}
-		case controller := <-g.unregisterController:
-			if _, ok := g.controllers[controller]; ok {
-				delete(g.controllers, controller)
-			}
-		case screen := <-g.registerScreen:
-			if g.screen == nil {
-				g.screen = screen
-			}
-		case <-g.unregisterScreen:
-			g.screen = nil
-		case info := <-g.registerGameInfo:
-			if g.info == nil {
-				g.info = info
-
-				g.info.input <- []byte(fmt.Sprintf("NewGame/%d", g.id))
-			}
-		case <-g.unregisterGameInfo:
-			g.info = nil
-		case cMessage := <-g.controllerMessages:
-			shotAngle, moveSpeed, moveAngle := processPlayerMessage(string(cMessage.message))
-			currPlayer := g.players[cMessage.c]
-			currPlayer.queueEvent(moveSpeed, moveAngle, shotAngle)
 		}
 	}
 }
