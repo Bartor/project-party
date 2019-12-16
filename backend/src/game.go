@@ -67,11 +67,12 @@ func findGameById(id uint64, games []*Game) *Game {
 
 func (g *Game) run() {
 	go processEvents(g)
+	go processGameEvents(g)
 	for {
 		select {
 		case controller := <-g.registerController:
 			g.controllers[controller] = true
-			newPlayer := &Player{g, len(g.players), 0, 0, 0}
+			newPlayer := &Player{g, len(g.players), 0, 0, 0, make([]*PlayerEvent, 0)}
 			g.players[controller] = newPlayer
 			select {
 			case g.screen.input <- []byte(fmt.Sprintf("NewPlayer/%d/%d/%d/%d", newPlayer.id, newPlayer.xPos, newPlayer.yPos, newPlayer.angle)):
@@ -100,8 +101,7 @@ func (g *Game) run() {
 		case cMessage := <-g.controllerMessages:
 			shotAngle, moveSpeed, moveAngle := processPlayerMessage(string(cMessage.message))
 			currPlayer := g.players[cMessage.c]
-			currPlayer.move(moveSpeed, moveAngle)
-			currPlayer.shoot(shotAngle)
+			currPlayer.queueEvent(moveSpeed, moveAngle, shotAngle)
 		}
 	}
 }
@@ -147,6 +147,20 @@ func processPlayerMessage(message string) (int, float64, int) {
 
 	fmt.Println("Wrong message format")
 	return -1, -1, -1
+}
+
+func processGameEvents(g *Game) {
+	for range time.Tick(time.Nanosecond * 50000000) {
+		for i := range g.shots {
+			currShot := g.shots[i]
+			currShot.move()
+		}
+
+		for i := range g.players {
+			currPlayer := g.players[i]
+			currPlayer.processLastEvent()
+		}
+	}
 }
 
 func processEvents(g *Game) {

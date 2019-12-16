@@ -5,13 +5,34 @@ import (
 	"math"
 )
 
-
 type Player struct {
-	game  *Game
-	id    int
-	xPos  int
-	yPos  int
-	angle int
+	game       *Game
+	id         int
+	xPos       int
+	yPos       int
+	angle      int
+	eventQueue []*PlayerEvent
+}
+
+type PlayerEvent struct {
+	moveSpeed float64
+	moveAngle int
+	shotAngle int
+}
+
+func (p *Player) queueEvent(moveSpeed float64, moveAngle int, shotAngle int) {
+	p.eventQueue = append(p.eventQueue, &PlayerEvent{moveSpeed, moveAngle, shotAngle})
+}
+
+func (p *Player) processLastEvent() {
+	if len(p.eventQueue) == 0 {
+		return
+	}
+
+	currEvent := p.eventQueue[len(p.eventQueue)-1]
+	p.move(currEvent.moveSpeed, currEvent.moveAngle)
+	p.shoot(currEvent.shotAngle)
+	p.eventQueue = nil
 }
 
 func (p *Player) move(moveSpeed float64, moveAngle int) {
