@@ -3,11 +3,39 @@
 }
 
 html, body {
+  overflow: hidden;
   background-color: #181818;
   height: 100%;
   margin: 0;
+
+  main {
+    height: 100%;
+
+    section {
+      padding: 10px;
+      font-family: monospace;
+      height: 100%;
+      display: flex;
+      flex-flow: column;
+      justify-content: center;
+      align-content: center;
+
+      color: white;
+
+      label {
+        text-align: center;
+      }
+
+      button {
+        width: 50%;
+        align-self: center;
+      }
+
+      header {
+        font-size: 3em;
+        text-align: center;
+      }
+    }
+  }
 }
 
-main {
-  height: 100%;
-}

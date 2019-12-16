@@ -1,0 +1,18 @@
+@import "../../styles/main";
+
+footer#notifications {
+  user-select: none;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+
+  p {
+    width: 50%;
+    @include interaction-style;
+  }
+}
