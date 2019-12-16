@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -74,7 +75,7 @@ func newGame() (*Game, error) {
 		players:              make(map[*Controller]*Player),
 		shots:                make([]*Shot, 0),
 		shotsFired:           0,
-		mapData:							loadedMap,
+		mapData:              loadedMap,
 	}, nil
 }
 
@@ -95,7 +96,7 @@ func (g *Game) run() {
 		select {
 		case controller := <-g.registerController:
 			g.controllers[controller] = true
-			newPlayer := &Player{g, len(g.players), 0, 0, 0, make([]*PlayerEvent, 0)}
+			newPlayer := &Player{g, len(g.players), 0, 0, 0, make([]*PlayerEvent, 0), true}
 			g.players[controller] = newPlayer
 			select {
 			case g.info.input <- []byte(fmt.Sprintf("NewPlayer/%d/%d/%d/%d", newPlayer.id, newPlayer.xPos, newPlayer.yPos, newPlayer.angle)):
@@ -190,6 +191,16 @@ func processGameEvents(g *Game) {
 			currPlayer := g.players[i]
 			currPlayer.processLastEvent()
 		}
+
+		for i := range g.shots {
+			currShot := g.shots[i]
+			for i := range g.players {
+				currPlayer := g.players[i]
+				if math.Abs(currShot.xPos-currPlayer.xPos) < 0.005 && math.Abs(currShot.yPos-currPlayer.yPos) < 0.05 {
+					go currPlayer.kill()
+				}
+			}
+		}
 	}
 }
 
@@ -200,7 +211,9 @@ func processEvents(g *Game) {
 			if len(g.players) > 0 {
 				for i := range g.players {
 					currPlayer := g.players[i]
-					updateString += fmt.Sprintf("%d/%d/%d/%d,", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle)
+					if currPlayer.alive {
+						updateString += fmt.Sprintf("%d/%d/%d/%d,", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle)
+					}
 				}
 				updateString = updateString[:len(updateString)-1]
 			}

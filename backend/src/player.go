@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"time"
 )
 
 type Player struct {
@@ -12,6 +13,7 @@ type Player struct {
 	yPos       int
 	angle      int
 	eventQueue []*PlayerEvent
+	alive      bool
 }
 
 type PlayerEvent struct {
@@ -57,4 +59,10 @@ func (p *Player) shoot(shotAngle int) {
 	p.game.shots = append(p.game.shots, currShot)
 	p.game.shotsFired++
 
+}
+
+func (p *Player) kill() {
+	p.alive = false
+	time.Sleep(3 * time.Second)
+	p.alive = true
 }
