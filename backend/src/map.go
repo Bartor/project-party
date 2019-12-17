@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"math"
 )
 
 type Map struct {
