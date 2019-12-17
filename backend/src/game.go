@@ -127,7 +127,7 @@ func (g *Game) run() {
 			newPlayer := &Player{g, len(g.players), 0, 0, 0, make([]*PlayerEvent, 0), true}
 			g.players[controller] = newPlayer
 			select {
-			case g.info.input <- []byte(fmt.Sprintf("NewPlayer/%d/%d/%d/%d", newPlayer.id, newPlayer.xPos, newPlayer.yPos, newPlayer.angle)):
+			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d", newPlayer.id)):
 				fmt.Println("Sent information regarding new player of id ", newPlayer.id)
 			default:
 				fmt.Println("huh")
