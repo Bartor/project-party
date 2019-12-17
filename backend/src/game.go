@@ -87,7 +87,7 @@ func (g *Game) getPlayerPositions() string {
 		for i := range g.players {
 			currPlayer := g.players[i]
 			if currPlayer.alive {
-				result += fmt.Sprintf("%d/%d/%d/%d,", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle)
+				result += fmt.Sprintf("%d/%f/%f/%d,", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle)
 			}
 		}
 		result = result[:len(result)-1]
@@ -101,7 +101,7 @@ func (g *Game) getShotPositions() string {
 	if len(g.shots) > 0 {
 		for i := range g.shots {
 			currShot := g.shots[i]
-			result += fmt.Sprintf("%d/%d/%d/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
+			result += fmt.Sprintf("%d/%f/%f/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
 		}
 		result = result[:len(result)-1]
 	}
