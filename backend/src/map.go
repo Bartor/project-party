@@ -44,6 +44,7 @@ func (m *Map) circleCircleCollision(xPosA, yPosA, radiusA, xVelocityA, yVelocity
 	if (delta >= 0) {
 		return true
 	}
+	return false
 }
 
 // does [(x1, y1), (x2, y2)] intersect [(x3, y3), (x4, y4)]?
