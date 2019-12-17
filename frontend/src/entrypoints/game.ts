@@ -1,5 +1,3 @@
-import {Player} from "../scripts/game_objects/player/Player";
-
 import '../styles/game.scss';
 import '../styles/main.scss';
 
@@ -12,12 +10,6 @@ window.addEventListener('load', () => {
     const createGameButton = document.getElementById('create');
 
     createGameButton.addEventListener('click', () => {
-       const container = document.createElement('div');
-       container.id = 'container';
-
-       const main = document.querySelector('main');
-       while (main.firstChild) main.removeChild(main.firstChild);
-       main.append(container);
        startGame();
     });
 });

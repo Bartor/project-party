@@ -1,36 +1,43 @@
 import {GameCommunicationInterface} from "../shared/interfaces/GameCommunication.interface";
 import {Subject} from "rxjs";
-import {RoundState} from "../shared/interfaces/RoundState.interface";
 import {GameplayUpdate} from "../shared/interfaces/GameplayUpdate.interface";
 import {WebSocketSubject} from "rxjs/webSocket";
 import {RotatedPosition} from "../shared/interfaces/RotatedPosition.interface";
-import {Point} from "../shared/interfaces/Point.interface";
+import {GameInfo} from "../shared/interfaces/GameInfo.interface";
+import {GameinfoCommand} from "../shared/enums/GameinfoCommand.enum";
+import {RoundState} from "../shared/interfaces/RoundState.interface";
+
+function parseRotatedPosition(packetString: string): RotatedPosition & { id: string } {
+    const parts = packetString.split('/');
+    return {
+        id: parts[0],
+        position: {
+            x: Number(parts[1]),
+            y: Number(parts[2]),
+        },
+        rotation: Number(parts[3])
+    }
+}
 
 export class GameCommunication implements GameCommunicationInterface {
     private gameplayWebsocket: WebSocketSubject<string>;
-    private roundStateSocket: WebSocketSubject<string>;
+    private gameinfoWebSocket: WebSocketSubject<string>;
 
-    private roundSubject = new Subject<RoundState>();
-    public roundUpdates = this.roundSubject.asObservable();
+    private gameinfoSubject = new Subject<GameInfo>();
+    public gameinfoUpdates = this.gameinfoSubject.asObservable();
 
     private gameplaySubject = new Subject<GameplayUpdate>();
-    public gameStateUpdates = this.gameplaySubject.asObservable();
-
-    private debugRoundState = {
-        map: [] as Array<Array<Point>>,
-        playerPositions: new Map()
-    };
+    public gameplayUpdates = this.gameplaySubject.asObservable();
 
     constructor(roundAddress: string, private gameplayAddress: string) {
-
-        this.roundStateSocket = new WebSocketSubject({
+        this.gameinfoWebSocket = new WebSocketSubject({
             url: roundAddress,
             deserializer: packet => packet.data
         });
-        this.roundStateSocket.subscribe(packet => this.parseRoundState(packet));
+        this.gameinfoWebSocket.subscribe(packet => this.parseGameinfo(packet));
     }
 
-    private startGameplayUpdates(id: string) {
+    public startGameplayUpdates(id: string) {
         this.gameplayWebsocket = new WebSocketSubject({
             url: this.gameplayAddress + `?id=${id}`,
             deserializer: packet => packet.data
@@ -38,32 +45,45 @@ export class GameCommunication implements GameCommunicationInterface {
         this.gameplayWebsocket.subscribe(packet => this.parseGameplay(packet));
     }
 
-    private parseRoundState(packet: string) {
-        const parts: string[] = packet.split('/');
+    private parseGameinfo(packet: string) { // command :: param1 :: param2 :: param3 :: ...
+        const parts: string[] = packet.split('::');
         const command = parts[0];
 
         switch (command) {
             case 'NewGame':
                 const gameId = parts[1];
+                this.gameinfoSubject.next({
+                    command: GameinfoCommand.NEW_GAME,
+                    params: gameId
+                });
+                break;
+            case 'NewRound':
+                const playerPositions = new Map<string, RotatedPosition>();
+                for (let player of parts[1].split(',') || []) {
+                    const res = parseRotatedPosition(player);
+                    playerPositions.set(res.id, res);
+                }
                 const map = JSON.parse(parts[2]);
-                this.debugRoundState.map = map.map;
-                this.roundSubject.next(this.debugRoundState);
-                console.log(`Game with ${gameId} was started; got a map
-                starting a new fake round`);
-
-                this.startGameplayUpdates(gameId);
+                this.gameinfoSubject.next({
+                    command: GameinfoCommand.NEW_ROUND,
+                    params: {
+                        playerPositions: playerPositions,
+                        map: map
+                    } as RoundState
+                });
                 break;
             case 'NewPlayer':
                 const playerId = parts[1];
-                const [x, y, rot] = parts.slice(2, 3).map(e => Number(e));
-                this.debugRoundState.playerPositions.set(playerId, {position: {x: x, y: y}, rotation: rot});
-                this.roundSubject.next(this.debugRoundState);
-
-                console.log(`New player with id ${playerId} on position ${x}, ${y}, ${rot} was spawned
-                starting a fake new round`);
+                this.gameinfoSubject.next({
+                    command: GameinfoCommand.NEW_PLAYER,
+                    params: playerId
+                });
                 break;
             case 'NewScreen':
-                console.log('New screen was connected');
+                this.gameinfoSubject.next({
+                    command: GameinfoCommand.NEW_SCREEN,
+                    params: ''
+                });
                 break;
         }
     }
@@ -76,25 +96,15 @@ export class GameCommunication implements GameCommunicationInterface {
 
         if (players) {
             for (let player of players.split(',') || []) {
-                let parts = player.split('/');
-                let id = parts[0];
-                let x = Number(parts[1]);
-                let y = Number(parts[2]);
-                let rot = Number(parts[3]);
-
-                playerPositions.set(id, {position: {x: x, y: y}, rotation: rot});
+                const res = parseRotatedPosition(player);
+                playerPositions.set(res.id, res);
             }
         }
 
         if (projectiles) {
             for (let projectile of projectiles.split(',') || []) {
-                let parts = projectile.split('/');
-                let id = parts[0];
-                let x = Number(parts[1]);
-                let y = Number(parts[2]);
-                let rot = Number(parts[3]);
-
-                projectilePositions.set(id, {position: {x: x, y: y}, rotation: rot});
+                const res = parseRotatedPosition(projectile);
+                projectilePositions.set(res.id, res);
             }
         }
 

@@ -1,5 +1,11 @@
+$bg-color: #181818;
+
 * {
   font-family: monospace;
+}
+
+header {
+  font-size: 3em;
 }
 
 @mixin interaction-style {

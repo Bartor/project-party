@@ -36,7 +36,7 @@ function joinGame(gameId: number) {
 
     while (container.firstChild) container.removeChild(container.firstChild);
 
-    const communication = new ControllerCommunication(config.controllerEndpoint + `?id=${gameId}`, 30);
+    const communication = new ControllerCommunication(config.controllerEndpoint + `?id=${gameId}`, 50);
     const controller = new Controller(container, communication);
     controller.drawLoop();
 }
