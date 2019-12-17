@@ -5,8 +5,12 @@ export class ProjectParty {
     private app: Application;
 
     constructor(container: HTMLElement, game: Game) {
+        const biggerDimension = Math.max(container.clientHeight, container.clientWidth);
+
         this.app = new Application({
-            antialias: true
+            antialias: true,
+            height: biggerDimension,
+            width: biggerDimension
         });
         container.appendChild(this.app.view);
 

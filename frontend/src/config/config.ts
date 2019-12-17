@@ -1,8 +1,9 @@
-const WEBSOCKET_ADDRESS = 'localhost';
+const WEBSOCKET_ADDRESS = 'other.bartor.net';
 const WEBSOCKET_PORT = 8080;
 const WEBSOCKET_ENDPOINTS: {[endpoint: string]: string} = {
     CONTROLLER: 'controllerWs',
-    SCREEN: 'screenWs'
+    SCREEN: 'screenWs',
+    GAME_INFO: 'gameInfoWs'
 };
 
 function createWsUrl(endpoint: string) {
@@ -11,5 +12,6 @@ function createWsUrl(endpoint: string) {
 
 export const config = {
     controllerEndpoint: createWsUrl('CONTROLLER'),
-    screenEndpoint: createWsUrl('SCREEN')
+    screenEndpoint: createWsUrl('SCREEN'),
+    gameInfoEndpoint: createWsUrl('GAME_INFO')
 };

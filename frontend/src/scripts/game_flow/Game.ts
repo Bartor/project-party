@@ -5,7 +5,9 @@ import {GameMap} from "../game_objects/map/GameMap";
 import {PlayerState} from "../shared/enums/PlayerState.enum";
 import {Round} from "./Round";
 import {Subject} from "rxjs";
+import {GameinfoCommand} from "../shared/enums/GameinfoCommand.enum";
 import DisplayObject = PIXI.DisplayObject;
+import {RoundState} from "../shared/interfaces/RoundState.interface";
 
 export class Game {
     private round: Round;
@@ -15,25 +17,51 @@ export class Game {
     private graphicsSubject = new Subject<DisplayObject[]>();
     public graphicsUpdates = this.graphicsSubject.asObservable();
 
-    private readonly playerLimit: number;
+    public gameId: string;
 
-    constructor(communicationService: GameCommunicationInterface, playerLimit: number = 8) {
-        this.playerLimit = playerLimit;
+    constructor(
+        private communicationService: GameCommunicationInterface,
+        private readonly playerLimit: number = 8
+    ) {
+        communicationService.gameinfoUpdates.subscribe(update => {
+            console.log('Got a gameinfo update', update);
+            switch (update.command) {
+                case GameinfoCommand.NEW_PLAYER:
+                    const player = new Player(
+                        Math.floor(Math.random() * 0xffffff),
+                        10
+                    );
+                    this.addPlayer(update.params as string, player);
+                    break;
+                case GameinfoCommand.NEW_GAME:
+                    this.gameId = update.params as string;
+                    break;
+                case GameinfoCommand.NEW_ROUND:
+                    this.players.forEach(player => player.state = PlayerState.ALIVE);
+                    (update.params as RoundState).playerPositions.forEach((position, name) => {
+                        const p = this.players.get(name);
+                        if (!p) {
+                            this.players.set(name, new Player(0xffffff, 10));
+                        }
+                        this.players.get(name).toRotatedPosition(position);
+                    });
 
-        communicationService.roundUpdates.subscribe(update => {
-            this.players.forEach(player => player.state = PlayerState.ALIVE);
-            update.playerPositions.forEach((position, name) => {
-                this.players.get(name).toRotatedPosition(position);
-            });
-
-            const map = new GameMap(update.map);
-            const normalGraphics: DisplayObject[] = [...map.getGraphics(), ...[...this.players.values()].map(p => p.getGraphics())];
-            this.graphicsSubject.next(normalGraphics);
-            this.round = new Round(this.players, map, communicationService.gameStateUpdates);
-            this.round.projectileUpdates.subscribe(update => {
-                this.graphicsSubject.next([...normalGraphics, ...update]); // wow so smart xDDDDD
-            });
+                    const map = new GameMap(update.params.map);
+                    const normalGraphics: DisplayObject[] = [...map.getGraphics(), ...[...this.players.values()].map(p => p.getGraphics())];
+                    this.graphicsSubject.next(normalGraphics);
+                    this.round = new Round(this.players, map, communicationService.gameplayUpdates);
+                    this.round.projectileUpdates.subscribe(update => {
+                        this.graphicsSubject.next([...normalGraphics, ...update]);
+                    });
+                    break;
+                case GameinfoCommand.SCOREBOARD_UPDATE:
+                    break;
+            }
         });
+    }
+
+    public startGame() {
+        this.communicationService.startGameplayUpdates(this.gameId);
     }
 
     public addPlayer(name: string, player: Player) {

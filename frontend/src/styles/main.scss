@@ -1,0 +1,40 @@
+$bg-color: #181818;
+
+* {
+  font-family: monospace;
+}
+
+header {
+  font-size: 3em;
+}
+
+@mixin interaction-style {
+  background-color: transparent;
+  color: white;
+  border: 1px solid white;
+  border-radius: 5px;
+  padding: 5px;
+  margin: 5px;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:disabled {
+    border: 1px solid rgba(1, 1, 1, 0.5);
+    color: rgba(1, 1, 1, 0.5);
+  }
+}
+
+input {
+  @include interaction-style;
+}
+
+button {
+  @include interaction-style;
+  transition: transform 50ms;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}

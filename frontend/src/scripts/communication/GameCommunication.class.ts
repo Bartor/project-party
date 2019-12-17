@@ -1,62 +1,122 @@
 import {GameCommunicationInterface} from "../shared/interfaces/GameCommunication.interface";
 import {Subject} from "rxjs";
-import {RoundState} from "../shared/interfaces/RoundState.interface";
 import {GameplayUpdate} from "../shared/interfaces/GameplayUpdate.interface";
 import {WebSocketSubject} from "rxjs/webSocket";
 import {RotatedPosition} from "../shared/interfaces/RotatedPosition.interface";
+import {GameinfoUpdate} from "../shared/interfaces/GamenfoUpdate.interface";
+import {GameinfoCommand} from "../shared/enums/GameinfoCommand.enum";
+import {RoundState} from "../shared/interfaces/RoundState.interface";
+
+function parseRotatedPosition(packetString: string, width: number, height: number): RotatedPosition & { id: string } {
+    const parts = packetString.split('/');
+    return {
+        id: parts[0],
+        position: {
+            x: Number(parts[1]) * width,
+            y: Number(parts[2]) * height,
+        },
+        rotation: Number(parts[3])
+    }
+}
 
 export class GameCommunication implements GameCommunicationInterface {
-    private websocket: WebSocketSubject<string>;
+    private gameplayWebsocket: WebSocketSubject<string>;
+    private gameinfoWebSocket: WebSocketSubject<string>;
 
-    private roundSubject = new Subject<RoundState>();
-    public roundUpdates = this.roundSubject.asObservable();
+    private gameinfoSubject = new Subject<GameinfoUpdate>();
+    public gameinfoUpdates = this.gameinfoSubject.asObservable();
 
     private gameplaySubject = new Subject<GameplayUpdate>();
-    public gameStateUpdates = this.gameplaySubject.asObservable();
+    public gameplayUpdates = this.gameplaySubject.asObservable();
 
-    constructor(address: string) {
-        this.websocket = new WebSocketSubject({
-            url: address,
+    constructor(
+        roundAddress: string,
+        private gameplayAddress: string,
+
+        private width: number,
+        private heigth: number
+    ) {
+        this.gameinfoWebSocket = new WebSocketSubject({
+            url: roundAddress,
             deserializer: packet => packet.data
         });
-        this.websocket.subscribe(packet => this.parseAndUpdate(packet));
+        this.gameinfoWebSocket.subscribe(packet => this.parseGameinfo(packet));
     }
 
-    public simulateNewRound(playerList: string[]) {
-        let playerPositions = new Map();
-        playerList.forEach(player => {
-            playerPositions.set(player, {position: {x: 0, y: 0}, rotation: 0});
+    public startGameplayUpdates(id: string) {
+        this.gameplayWebsocket = new WebSocketSubject({
+            url: this.gameplayAddress + `?id=${id}`,
+            deserializer: packet => packet.data
         });
-        this.roundSubject.next({
-            map: [],
-            playerPositions: playerPositions
-        });
+        this.gameplayWebsocket.subscribe(packet => this.parseGameplay(packet));
     }
 
-    private parseAndUpdate(packet: string) {
+    private parseGameinfo(packet: string) { // command :: param1 :: param2 :: param3 :: ...
+        const parts: string[] = packet.split('::');
+        const command = parts[0];
+
+        switch (command) {
+            case 'NewGame':
+                const gameId = parts[1];
+                this.gameinfoSubject.next({
+                    command: GameinfoCommand.NEW_GAME,
+                    params: gameId
+                });
+                break;
+            case 'NewRound':
+                const playerPositions = new Map<string, RotatedPosition>();
+                if (parts[1] !== '') {
+                    for (let player of parts[1].split(',') || []) {
+                        const res = parseRotatedPosition(player, this.width, this.heigth);
+                        playerPositions.set(res.id, res);
+                    }
+                }
+                const map = JSON.parse(parts[2]).walls.map((obs: number[]) => obs.map((pos, i) => i % 2 ? pos * this.width : pos * this.heigth));
+                console.log(map);
+                this.gameinfoSubject.next({
+                    command: GameinfoCommand.NEW_ROUND,
+                    params: {
+                        playerPositions: playerPositions,
+                        map: map
+                    } as RoundState
+                });
+                break;
+            case 'NewPlayer':
+                const playerId = parts[1];
+                this.gameinfoSubject.next({
+                    command: GameinfoCommand.NEW_PLAYER,
+                    params: playerId
+                });
+                break;
+            case 'NewScreen':
+                this.gameinfoSubject.next({
+                    command: GameinfoCommand.NEW_SCREEN,
+                    params: ''
+                });
+                break;
+        }
+    }
+
+    private parseGameplay(packet: string) {
         const playerPositions = new Map<string, RotatedPosition>();
         const projectilePositions = new Map<string, RotatedPosition>();
 
         const [players, projectiles] = packet.split(':');
-        for (let player of players.split(',') || []) {
-            let parts = player.split('/');
-            let id = parts[0];
-            let x = Number(parts[1]);
-            let y = Number(parts[2]);
-            let rot = Number(parts[3]);
 
-            playerPositions.set(id, {position: {x: x, y: y}, rotation: rot});
+        if (players) {
+            for (let player of players.split(',') || []) {
+                const res = parseRotatedPosition(player, this.width, this.heigth);
+                playerPositions.set(res.id, res);
+            }
         }
-        for (let projectile of projectiles.split(',') || []) {
-            let parts = projectile.split('/');
-            let id = parts[0];
-            let x = Number(parts[1]);
-            let y = Number(parts[2]);
-            let rot = Number(parts[3]);
 
-            projectilePositions.set(id, {position: {x: x, y: y}, rotation: rot});
+        if (projectiles) {
+            for (let projectile of projectiles.split(',') || []) {
+                const res = parseRotatedPosition(projectile, this.width, this.heigth);
+                projectilePositions.set(res.id, res);
+            }
         }
-        console.log('Received and parsed', playerPositions, projectilePositions);
+
         this.gameplaySubject.next({
             playerPositions: playerPositions,
             projectilePositions: projectilePositions

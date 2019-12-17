@@ -7,6 +7,8 @@ export class Player extends MovableGraphics {
 
     constructor(color: number, size: number) {
         super();
+        this.angleFixup = Math.PI * 3 / 4;
+
         this.color = color;
 
         this.graphics.beginFill(0xffffff);
@@ -18,7 +20,5 @@ export class Player extends MovableGraphics {
         this.graphics.lineStyle(size / 4, 0xffffff);
         this.graphics.drawCircle(size / 2, size / 2, 1.5 * size);
         this.graphics.endFill();
-
-        this.graphics.rotation = Math.PI / 4;
     }
 }
