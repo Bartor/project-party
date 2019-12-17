@@ -6,7 +6,9 @@ export class ProjectParty {
 
     constructor(container: HTMLElement, game: Game) {
         this.app = new Application({
-            antialias: true
+            antialias: true,
+            height: container.clientHeight,
+            width: container.clientWidth
         });
         container.appendChild(this.app.view);
 

@@ -23,6 +23,10 @@ export class Game {
         communicationService.roundUpdates.subscribe(update => {
             this.players.forEach(player => player.state = PlayerState.ALIVE);
             update.playerPositions.forEach((position, name) => {
+                const p = this.players.get(name);
+                if (!p) {
+                    this.players.set(name, new Player(0xffffff, 10));
+                }
                 this.players.get(name).toRotatedPosition(position);
             });
 
