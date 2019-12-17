@@ -2,7 +2,21 @@ import {PlayerState} from "../../shared/enums/PlayerState.enum";
 import {MovableGraphics} from "../../shared/abstract/MovableGraphics.asbstract.class";
 
 export class Player extends MovableGraphics {
-    public state = PlayerState.ALIVE;
+    private _state = PlayerState.ALIVE;
+    public get state() { return this._state; }
+    public set state(state: PlayerState) {
+        switch (state) {
+            case PlayerState.SCHRODINGER:
+            case PlayerState.ALIVE:
+                this.graphics.alpha = 1;
+                break;
+            case PlayerState.DEAD:
+                this.graphics.alpha = 0.2;
+                break;
+        }
+        this._state = state;
+    }
+
     private color: number;
 
     constructor(color: number, size: number) {

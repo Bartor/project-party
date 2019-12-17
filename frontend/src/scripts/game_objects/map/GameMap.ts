@@ -1,5 +1,4 @@
 import {Obstacle} from "./Obstacle";
-import {Point} from "../../shared/interfaces/Point.interface";
 
 export class GameMap {
     private obstacles: Obstacle[] = [];
