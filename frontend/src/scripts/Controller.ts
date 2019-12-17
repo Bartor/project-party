@@ -147,13 +147,13 @@ export class Controller {
         let calculatedAngle: number;
 
         if (pivot.x < point.x) {
-            if (pivot.y < point.y) {
+            if (pivot.y > point.y) {
                 calculatedAngle = 2*Math.PI - Math.asin(sin);
             } else {
                 calculatedAngle = Math.asin(sin);
             }
         } else {
-            if (pivot.y < point.y) {
+            if (pivot.y > point.y) {
                 calculatedAngle = Math.PI + Math.asin(sin);
             } else {
                 calculatedAngle = Math.PI - Math.asin(sin);

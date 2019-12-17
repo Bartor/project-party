@@ -7,8 +7,8 @@ export abstract class MovableGraphics {
 
     public toRotatedPosition(position: RotatedPosition): this {
         this.graphics.x = position.position.x;
-        this.graphics.y = -position.position.y;
-        this.graphics.rotation = -position.rotation*Math.PI/180 + this.angleFixup;
+        this.graphics.y = position.position.y;
+        this.graphics.rotation = position.rotation*Math.PI/180 + this.angleFixup;
         return this;
     }
 

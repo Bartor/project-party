@@ -103,9 +103,7 @@ func (g *Game) getShotPositions() string {
 	if len(g.shots) > 0 {
 		for i := range g.shots {
 			currShot := g.shots[i]
-			if currShot.xPos >= 1 || currShot.xPos <= 0 || currShot.yPos >= 1 || currShot.yPos <= 0 {
-
-			} else {
+			if currShot.xPos <= 1.5 && currShot.xPos >= -0.5 && currShot.yPos >= -0.5 && currShot.yPos <= 1.5 {
 				result += fmt.Sprintf("%d/%f/%f/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
 			}
 		}
@@ -132,7 +130,7 @@ func (g *Game) run() {
 		select {
 		case controller := <-g.registerController:
 			g.controllers[controller] = true
-			newPlayer := &Player{g, len(g.players), 0.15, 0.15, 0, make([]*PlayerEvent, 0), true}
+			newPlayer := &Player{g, len(g.players), 0.5, 0.5, 0, make([]*PlayerEvent, 0), true}
 			g.players[controller] = newPlayer
 			select {
 			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d", newPlayer.id)):
@@ -217,7 +215,6 @@ func processGameEvents(g *Game) {
 		for i := range g.shots {
 			currShot := g.shots[i]
 			currShot.move()
-
 		}
 
 		// for i := 0; i < len(g.shots); {
@@ -240,6 +237,7 @@ func processGameEvents(g *Game) {
 				currPlayer := g.players[i]
 				if math.Abs(currShot.xPos-currPlayer.xPos) < 0.025 && math.Abs(currShot.yPos-currPlayer.yPos) < 0.025 && currShot.owner.id != currPlayer.id {
 					currPlayer.kill()
+					fmt.Println("Played with id ", currPlayer.id, " killed")
 				}
 			}
 		}

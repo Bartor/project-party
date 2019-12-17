@@ -32,7 +32,7 @@ func (p *Player) processLastEvent() {
 	}
 
 	currEvent := p.eventQueue[len(p.eventQueue)-1]
-	if (p.alive) {
+	if p.alive {
 		p.move(currEvent.moveSpeed, currEvent.moveAngle)
 		p.shoot(currEvent.shotAngle)
 	}
@@ -48,17 +48,18 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 	newXPos := moveSpeed*globalMoveSpeed*math.Cos(float64(moveAngle)*math.Pi/180.0) + p.xPos
 	newYPos := moveSpeed*globalMoveSpeed*math.Sin(float64(moveAngle)*math.Pi/180.0) + p.yPos
 
-	for _, wall := range p.game.mapData.Walls {
-		for i := 0; i < len(wall); i += 2 {
-			xPosA := wall[i]
-			yPosA := wall[i+1]
-			xPosB := wall[(i+2) % len(wall)]
-			yPosB := wall[(i+3) % len(wall)]
-			if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, newXPos, newYPos, playerRadius) {
-				return
-			}
-		}
-	}
+	// for _, wall := range p.game.mapData.Walls {
+	// 	for i := 0; i < len(wall); i += 2 {
+	// 		xPosA := wall[i]
+	// 		yPosA := wall[i+1]
+	// 		xPosB := wall[(i+2)%len(wall)]
+	// 		yPosB := wall[(i+3)%len(wall)]
+	// 		if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, newXPos, newYPos, playerRadius) {
+	// 			fmt.Println("Found collision with wall of index ", i)
+	// 			return
+	// 		}
+	// 	}
+	// }
 
 	p.xPos = newXPos
 	p.yPos = newYPos
