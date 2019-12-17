@@ -45,10 +45,24 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 	}
 
 	fmt.Printf("Player moving at speed %f at angle %d\n", moveSpeed, moveAngle)
-	p.xPos = moveSpeed*globalMoveSpeed*math.Cos(float64(moveAngle)*math.Pi/180.0) + p.xPos
-	p.yPos = moveSpeed*globalMoveSpeed*math.Sin(float64(moveAngle)*math.Pi/180.0) + p.yPos
-	p.angle = moveAngle
+	newXPos := moveSpeed*globalMoveSpeed*math.Cos(float64(moveAngle)*math.Pi/180.0) + p.xPos
+	newYPos := moveSpeed*globalMoveSpeed*math.Sin(float64(moveAngle)*math.Pi/180.0) + p.yPos
 
+	for _, wall := range p.game.mapData.Walls {
+		for i := 0; i < len(wall); i += 2 {
+			xPosA := wall[i]
+			yPosA := wall[i+1]
+			xPosB := wall[(i+2) % len(wall)]
+			yPosB := wall[(i+3) % len(wall)]
+			if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, newXPos, newYPos, playerRadius) {
+				return
+			}
+		}
+	}
+
+	p.xPos = newXPos
+	p.yPos = newYPos
+	p.angle = moveAngle
 }
 
 func (p *Player) shoot(shotAngle int) {

@@ -90,7 +90,7 @@ func (g *Game) getPlayerPositions() string {
 				result += fmt.Sprintf("%d/%f/%f/%d,", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle)
 			}
 		}
-		if (len(result) > 0) {
+		if len(result) > 0 {
 			result = result[:len(result)-1]
 		}
 	}
@@ -105,7 +105,7 @@ func (g *Game) getShotPositions() string {
 			currShot := g.shots[i]
 			result += fmt.Sprintf("%d/%f/%f/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
 		}
-		if (len(result) > 0) {
+		if len(result) > 0 {
 			result = result[:len(result)-1]
 		}
 	}
@@ -128,7 +128,7 @@ func (g *Game) run() {
 		select {
 		case controller := <-g.registerController:
 			g.controllers[controller] = true
-			newPlayer := &Player{g, len(g.players), 0, 0, 0, make([]*PlayerEvent, 0), true}
+			newPlayer := &Player{g, len(g.players), 0.5, 0.5, 0, make([]*PlayerEvent, 0), true}
 			g.players[controller] = newPlayer
 			select {
 			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d", newPlayer.id)):
@@ -144,7 +144,6 @@ func (g *Game) run() {
 			if g.screen == nil {
 				g.screen = screen
 			}
-
 			messageToSend := []byte(fmt.Sprintf("NewRound::%s::", g.getPlayerPositions()))
 			messageToSend = append(messageToSend, createJsonFromMap(g.mapData)...)
 			g.info.input <- messageToSend
@@ -214,6 +213,14 @@ func processGameEvents(g *Game) {
 		for i := range g.shots {
 			currShot := g.shots[i]
 			currShot.move()
+
+		}
+
+		for i := range g.shots {
+			currShot := g.shots[i]
+			if currShot.xPos >= 1 || currShot.xPos <= 0 || currShot.yPos >= 1 || currShot.yPos <= 0 {
+				g.shots = removeShot(g.shots, i)
+			}
 		}
 
 		for i := range g.players {
@@ -225,12 +232,17 @@ func processGameEvents(g *Game) {
 			currShot := g.shots[i]
 			for i := range g.players {
 				currPlayer := g.players[i]
-				if math.Abs(currShot.xPos-currPlayer.xPos) < 0.005 && math.Abs(currShot.yPos-currPlayer.yPos) < 0.05 {
+				if math.Abs(currShot.xPos-currPlayer.xPos) < 0.025 && math.Abs(currShot.yPos-currPlayer.yPos) < 0.025 && currShot.owner.id != currPlayer.id {
 					currPlayer.kill()
 				}
 			}
 		}
 	}
+}
+
+func removeShot(s []*Shot, i int) []*Shot {
+	s[len(s)-1], s[i] = s[i], s[len(s)-1]
+	return s[:len(s)-1]
 }
 
 func processEvents(g *Game) {

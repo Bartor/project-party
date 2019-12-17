@@ -25,6 +25,9 @@ const (
 
 	// The speed at which players will walk
 	globalMoveSpeed = 5.0 / 800.0
+
+	playerRadius = 0.025
+	unitSize = 0.00125
 )
 
 var (
