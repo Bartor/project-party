@@ -221,7 +221,7 @@ func processGameEvents(g *Game) {
 			currShot := g.shots[i]
 			for i := range g.players {
 				currPlayer := g.players[i]
-				if math.Abs(float64(currShot.xPos-currPlayer.xPos)) < 0.005 && math.Abs(float64(currShot.yPos-currPlayer.yPos)) < 0.05 {
+				if math.Abs(currShot.xPos-currPlayer.xPos) < 0.005 && math.Abs(currShot.yPos-currPlayer.yPos) < 0.05 {
 					currPlayer.kill()
 				}
 			}
