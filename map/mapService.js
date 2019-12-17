@@ -46,22 +46,23 @@ app.get('/generate', (req, res) => {
 
         // Create a new array of the same size as the map
         var processedMap = [...Array(map.width)].map(x => Array(map.height).fill(1))
-        for (var x = 1; x < processedMap.length - 1; x++) {
-            for (var y = 1; y < processedMap[0].length; y++) {
+        var spawnPoints = []
+        for (var y = 1; y < processedMap.length - 1; y++) {
+            for (var x = 1; x < processedMap[0].length; x++) {
                 // Iterate over neighbours
-                if (map.map[x][y] === 0) {
+                if (map.map[y][x] === 0) {
                     if (isNeighbourWall(x, y, map.map)) {
-                        processedMap[x][y] = 1
+                        processedMap[y][x] = 1
                     } else {
-                        processedMap[x][y] = 0
+                        processedMap[y][x] = 0
+                        spawnPoints.push({x: (x+0.5)/(map.width), y: (y+0.5)/(map.height)})
                     }
                 }
             }
         }
-
         res.status(200).json({
             map: map.map,
-            processedMap: processedMap,
+            spawnPoints: spawnPoints,
             walls: outlines,
             error: null
         })
