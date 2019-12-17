@@ -55,13 +55,6 @@ func newGame() (*Game, error) {
 	newId := currentId
 	currentId++
 
-	loadedMap, err := loadMap()
-
-	if err != nil {
-		fmt.Printf("The HTTP request to grab map data failed with error %s\n", err)
-		return nil, err
-	}
-
 	return &Game{
 		id:                   newId,
 		controllers:          make(map[*Controller]bool),
@@ -75,7 +68,6 @@ func newGame() (*Game, error) {
 		players:              make(map[*Controller]*Player),
 		shots:                make([]*Shot, 0),
 		shotsFired:           0,
-		mapData:              loadedMap,
 	}, nil
 }
 
@@ -89,7 +81,43 @@ func findGameById(id uint64, games []*Game) *Game {
 	return nil
 }
 
+func (g *Game) getPlayerPositions() string {
+	result := ""
+	if len(g.players) > 0 {
+		for i := range g.players {
+			currPlayer := g.players[i]
+			if currPlayer.alive {
+				result += fmt.Sprintf("%d/%d/%d/%d,", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle)
+			}
+		}
+		result = result[:len(result)-1]
+	}
+
+	return result
+}
+
+func (g *Game) getShotPositions() string {
+	result := ""
+	if len(g.shots) > 0 {
+		for i := range g.shots {
+			currShot := g.shots[i]
+			result += fmt.Sprintf("%d/%d/%d/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
+		}
+		result = result[:len(result)-1]
+	}
+
+	return result
+}
 func (g *Game) run() {
+	loadedMap, err := loadMap()
+
+	if err != nil {
+		fmt.Printf("The HTTP request to grab map data failed with error %s\n", err)
+		return
+	}
+
+	g.mapData = loadedMap
+
 	go processEvents(g)
 	go processGameEvents(g)
 	for {
@@ -112,19 +140,16 @@ func (g *Game) run() {
 			if g.screen == nil {
 				g.screen = screen
 			}
-			select {
-			case g.info.input <- []byte(fmt.Sprintf("NewScreen")):
-				fmt.Println("Sent information regarding new screen")
-			default:
-				fmt.Println("huh")
-			}
+
+			messageToSend := []byte(fmt.Sprintf("NewRound::%s::", g.getPlayerPositions()))
+			messageToSend = append(messageToSend, createJsonFromMap(g.mapData)...)
+			g.info.input <- messageToSend
 		case <-g.unregisterScreen:
 			g.screen = nil
 		case info := <-g.registerGameInfo:
 			if g.info == nil {
 				g.info = info
-				messageToSend := []byte(fmt.Sprintf("NewGame/%d/", g.id))
-				messageToSend = append(messageToSend, createJsonFromMap(g.mapData)...)
+				messageToSend := []byte(fmt.Sprintf("NewGame::%d", g.id))
 				g.info.input <- messageToSend
 			}
 		case <-g.unregisterGameInfo:
@@ -207,24 +232,9 @@ func processGameEvents(g *Game) {
 func processEvents(g *Game) {
 	for range time.Tick(time.Nanosecond * 100000000) {
 		if g.screen != nil {
-			updateString := ""
-			if len(g.players) > 0 {
-				for i := range g.players {
-					currPlayer := g.players[i]
-					if currPlayer.alive {
-						updateString += fmt.Sprintf("%d/%d/%d/%d,", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle)
-					}
-				}
-				updateString = updateString[:len(updateString)-1]
-			}
+			updateString := g.getPlayerPositions()
 			updateString += ":"
-			if len(g.shots) > 0 {
-				for i := range g.shots {
-					currShot := g.shots[i]
-					updateString += fmt.Sprintf("%d/%d/%d/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
-				}
-				updateString = updateString[:len(updateString)-1]
-			}
+			updateString += g.getShotPositions()
 			fmt.Println(updateString)
 			g.screen.input <- []byte(updateString)
 		}
