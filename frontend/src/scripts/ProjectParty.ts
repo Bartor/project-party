@@ -1,7 +1,6 @@
 import {Application} from 'pixi.js';
 import {Game} from "./game_flow/Game";
 import DisplayObject = PIXI.DisplayObject;
-import {map} from "rxjs/operators";
 
 export class ProjectParty {
     private app: Application;

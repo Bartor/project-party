@@ -39,10 +39,6 @@ export class Game {
                 case GameinfoCommand.NEW_ROUND:
                     this.players.forEach(player => player.state = PlayerState.ALIVE);
                     (update.params as RoundState).playerPositions.forEach((position, name) => {
-                        const p = this.players.get(name);
-                        if (!p) {
-                            this.players.set(name, new Player(Math.random() * 0xffffff, 10));
-                        }
                         this.players.get(name).toRotatedPosition(position);
                     });
 
