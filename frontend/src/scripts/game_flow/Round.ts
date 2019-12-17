@@ -23,6 +23,7 @@ export class Round {
             this.projectiles.forEach(projectile => projectile.marked = false);
 
             update.playerPositions.forEach((position, name) => {
+                this.players.get(name).state = PlayerState.ALIVE;
                 this.players.get(name).toRotatedPosition(position);
             });
             update.projectilePositions.forEach((position, name) => {
@@ -36,7 +37,8 @@ export class Round {
                 }
             });
 
-            // this line is base on the fact that PlayerState.ALIVE is 0; if enums will ever change, it'll stop working
+            // this line is base on the fact that PlayerState.SCHRODINGER is 0; if enums will ever change, it'll stop
+            // working
             this.players.forEach(player => player.state = player.state || PlayerState.DEAD);
             this.projectiles.forEach((projectile, name) => {
                 if (!projectile.marked) {

@@ -1,11 +1,10 @@
 import {Obstacle} from "./Obstacle";
-import {Point} from "../../shared/interfaces/Point.interface";
 
 export class GameMap {
     private obstacles: Obstacle[] = [];
 
-    constructor(obstacles: Point[][]) {
-        for (let obstacle of obstacles) {
+    constructor(obstacles: number[][]) {
+        for (let obstacle of obstacles.slice(2)) {
             this.obstacles.push(new Obstacle(obstacle));
         }
     }

@@ -6,15 +6,15 @@ import {PlayerState} from "../shared/enums/PlayerState.enum";
 import {Round} from "./Round";
 import {Subject} from "rxjs";
 import {GameinfoCommand} from "../shared/enums/GameinfoCommand.enum";
-import DisplayObject = PIXI.DisplayObject;
 import {RoundState} from "../shared/interfaces/RoundState.interface";
+import {GraphicsUpdate} from "../shared/interfaces/GraphicsUpdate.interface";
 
 export class Game {
     private round: Round;
     private players: Map<string, Player> = new Map();
     private scores: Map<string, number> = new Map();
 
-    private graphicsSubject = new Subject<DisplayObject[]>();
+    private graphicsSubject = new Subject<GraphicsUpdate>();
     public graphicsUpdates = this.graphicsSubject.asObservable();
 
     public gameId: string;
@@ -41,17 +41,32 @@ export class Game {
                     (update.params as RoundState).playerPositions.forEach((position, name) => {
                         const p = this.players.get(name);
                         if (!p) {
-                            this.players.set(name, new Player(0xffffff, 10));
+                            this.players.set(name, new Player(Math.random() * 0xffffff, 10));
                         }
                         this.players.get(name).toRotatedPosition(position);
                     });
 
                     const map = new GameMap(update.params.map);
-                    const normalGraphics: DisplayObject[] = [...map.getGraphics(), ...[...this.players.values()].map(p => p.getGraphics())];
-                    this.graphicsSubject.next(normalGraphics);
+
+                    const mapGraphics = map.getGraphics();
+                    const playerGraphics = [...this.players.values()].map(p => p.getGraphics());
+
+                    this.graphicsSubject.next({
+                        newPlayers: true,
+                        newMap: true,
+                        map: mapGraphics,
+                        projectiles: [],
+                        players: playerGraphics
+                    });
                     this.round = new Round(this.players, map, communicationService.gameplayUpdates);
                     this.round.projectileUpdates.subscribe(update => {
-                        this.graphicsSubject.next([...normalGraphics, ...update]);
+                        this.graphicsSubject.next({
+                            newPlayers: false,
+                            newMap: false,
+                            map: mapGraphics,
+                            projectiles: update,
+                            players: playerGraphics
+                        });
                     });
                     break;
                 case GameinfoCommand.SCOREBOARD_UPDATE:
