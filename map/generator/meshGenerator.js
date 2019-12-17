@@ -215,7 +215,7 @@ class SquareGrid {
         // Convert every point from the original map and convert it to a node with an appropriate position
         for (var x = 0; x < nodeCountX; x++) {
             for (var y = 0; y < nodeCountY; y++) {
-                var pos = new Vec(-mapWidth / 2.0 + x * squareSize + squareSize / 2.0, -mapHeight / 2.0 + y * squareSize + squareSize / 2.0, 0);
+                var pos = new Vec(x * squareSize + squareSize / 2.0, y * squareSize + squareSize / 2.0, 0);
                 controlNodes[x][y] = new Node(pos, map[x][y] == 1, squareSize);
             }
         }

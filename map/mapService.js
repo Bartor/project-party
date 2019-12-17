@@ -18,7 +18,7 @@ app.get('/generate', (req, res) => {
         var map = new MapGenerator(parseInt(width), parseInt(height))
         map.randomFillPercent = parseInt(fillPercentage)
         map.generateMap()
-        var mesh = new MeshGenerator(map.map, 2.0 / map.width)
+        var mesh = new MeshGenerator(map.map, 1.0 / map.width)
         var outlines = mesh.calculateOutlines()
         
         var ratio = map.width / map.height
