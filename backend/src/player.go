@@ -32,8 +32,10 @@ func (p *Player) processLastEvent() {
 	}
 
 	currEvent := p.eventQueue[len(p.eventQueue)-1]
-	p.move(currEvent.moveSpeed, currEvent.moveAngle)
-	p.shoot(currEvent.shotAngle)
+	if (p.alive) {
+		p.move(currEvent.moveSpeed, currEvent.moveAngle)
+		p.shoot(currEvent.shotAngle)
+	}
 	p.eventQueue = nil
 }
 
