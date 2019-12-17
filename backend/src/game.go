@@ -103,7 +103,11 @@ func (g *Game) getShotPositions() string {
 	if len(g.shots) > 0 {
 		for i := range g.shots {
 			currShot := g.shots[i]
-			result += fmt.Sprintf("%d/%f/%f/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
+			if currShot.xPos >= 1 || currShot.xPos <= 0 || currShot.yPos >= 1 || currShot.yPos <= 0 {
+
+			} else {
+				result += fmt.Sprintf("%d/%f/%f/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
+			}
 		}
 		if len(result) > 0 {
 			result = result[:len(result)-1]
@@ -128,7 +132,7 @@ func (g *Game) run() {
 		select {
 		case controller := <-g.registerController:
 			g.controllers[controller] = true
-			newPlayer := &Player{g, len(g.players), 0.5, 0.5, 0, make([]*PlayerEvent, 0), true}
+			newPlayer := &Player{g, len(g.players), 0.15, 0.15, 0, make([]*PlayerEvent, 0), true}
 			g.players[controller] = newPlayer
 			select {
 			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d", newPlayer.id)):
@@ -216,12 +220,14 @@ func processGameEvents(g *Game) {
 
 		}
 
-		for i := range g.shots {
-			currShot := g.shots[i]
-			if currShot.xPos >= 1 || currShot.xPos <= 0 || currShot.yPos >= 1 || currShot.yPos <= 0 {
-				g.shots = removeShot(g.shots, i)
-			}
-		}
+		// for i := 0; i < len(g.shots); {
+		// 	currShot := g.shots[i]
+		// 	if currShot.xPos >= 1 || currShot.xPos <= 0 || currShot.yPos >= 1 || currShot.yPos <= 0 {
+		// 		g.shots = removeShot(g.shots, i)
+		// 	} else {
+		// 		i++
+		// 	}
+		// }
 
 		for i := range g.players {
 			currPlayer := g.players[i]
