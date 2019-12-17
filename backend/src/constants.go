@@ -21,10 +21,10 @@ const (
 
 	// GAME RELATED CONSTANTS
 	// The speed at which the shot will travel
-	globalShotSpeed = 10 / 800
+	globalShotSpeed = 10.0 / 800.0
 
 	// The speed at which players will walk
-	globalMoveSpeed = 5 / 800
+	globalMoveSpeed = 5.0 / 800.0
 )
 
 var (
