@@ -41,7 +41,7 @@ type ControllerMessage struct {
 }
 
 func loadMap() (Map, error) {
-	response, err := http.Get("http://map:3000/generate?width=100&height=100&fillPercentage=42")
+	response, err := http.Get("http://map:3000/generate?width=75&height=75&fillPercentage=42")
 	if err != nil {
 		return Map{}, err
 	}
@@ -90,7 +90,9 @@ func (g *Game) getPlayerPositions() string {
 				result += fmt.Sprintf("%d/%f/%f/%d,", currPlayer.id, currPlayer.xPos, currPlayer.yPos, currPlayer.angle)
 			}
 		}
-		result = result[:len(result)-1]
+		if (len(result) > 0) {
+			result = result[:len(result)-1]
+		}
 	}
 
 	return result
@@ -103,7 +105,9 @@ func (g *Game) getShotPositions() string {
 			currShot := g.shots[i]
 			result += fmt.Sprintf("%d/%f/%f/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
 		}
-		result = result[:len(result)-1]
+		if (len(result) > 0) {
+			result = result[:len(result)-1]
+		}
 	}
 
 	return result
