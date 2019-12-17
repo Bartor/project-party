@@ -3,17 +3,17 @@ import {Subject} from "rxjs";
 import {GameplayUpdate} from "../shared/interfaces/GameplayUpdate.interface";
 import {WebSocketSubject} from "rxjs/webSocket";
 import {RotatedPosition} from "../shared/interfaces/RotatedPosition.interface";
-import {GameInfo} from "../shared/interfaces/GameInfo.interface";
+import {GameinfoUpdate} from "../shared/interfaces/GamenfoUpdate.interface";
 import {GameinfoCommand} from "../shared/enums/GameinfoCommand.enum";
 import {RoundState} from "../shared/interfaces/RoundState.interface";
 
-function parseRotatedPosition(packetString: string): RotatedPosition & { id: string } {
+function parseRotatedPosition(packetString: string, width: number, height: number): RotatedPosition & { id: string } {
     const parts = packetString.split('/');
     return {
         id: parts[0],
         position: {
-            x: Number(parts[1]),
-            y: Number(parts[2]),
+            x: Number(parts[1]) * width,
+            y: Number(parts[2]) * height,
         },
         rotation: Number(parts[3])
     }
@@ -23,13 +23,19 @@ export class GameCommunication implements GameCommunicationInterface {
     private gameplayWebsocket: WebSocketSubject<string>;
     private gameinfoWebSocket: WebSocketSubject<string>;
 
-    private gameinfoSubject = new Subject<GameInfo>();
+    private gameinfoSubject = new Subject<GameinfoUpdate>();
     public gameinfoUpdates = this.gameinfoSubject.asObservable();
 
     private gameplaySubject = new Subject<GameplayUpdate>();
     public gameplayUpdates = this.gameplaySubject.asObservable();
 
-    constructor(roundAddress: string, private gameplayAddress: string) {
+    constructor(
+        roundAddress: string,
+        private gameplayAddress: string,
+
+        private width: number,
+        private heigth: number
+    ) {
         this.gameinfoWebSocket = new WebSocketSubject({
             url: roundAddress,
             deserializer: packet => packet.data
@@ -59,11 +65,14 @@ export class GameCommunication implements GameCommunicationInterface {
                 break;
             case 'NewRound':
                 const playerPositions = new Map<string, RotatedPosition>();
-                for (let player of parts[1].split(',') || []) {
-                    const res = parseRotatedPosition(player);
-                    playerPositions.set(res.id, res);
+                if (parts[1] !== '') {
+                    for (let player of parts[1].split(',') || []) {
+                        const res = parseRotatedPosition(player, this.width, this.heigth);
+                        playerPositions.set(res.id, res);
+                    }
                 }
-                const map = JSON.parse(parts[2]);
+                const map = JSON.parse(parts[2]).walls.map((obs: number[]) => obs.map((pos, i) => i % 2 ? pos * this.width : pos * this.heigth));
+                console.log(map);
                 this.gameinfoSubject.next({
                     command: GameinfoCommand.NEW_ROUND,
                     params: {
@@ -96,14 +105,14 @@ export class GameCommunication implements GameCommunicationInterface {
 
         if (players) {
             for (let player of players.split(',') || []) {
-                const res = parseRotatedPosition(player);
+                const res = parseRotatedPosition(player, this.width, this.heigth);
                 playerPositions.set(res.id, res);
             }
         }
 
         if (projectiles) {
             for (let projectile of projectiles.split(',') || []) {
-                const res = parseRotatedPosition(projectile);
+                const res = parseRotatedPosition(projectile, this.width, this.heigth);
                 projectilePositions.set(res.id, res);
             }
         }

@@ -17,8 +17,13 @@ window.addEventListener('load', () => {
 
 function startGame() {
     const container = document.getElementById('container');
+    const startGameButton = document.getElementById('start');
 
-    const communication = new GameCommunication(config.gameInfoEndpoint, config.screenEndpoint);
+    const communication = new GameCommunication(config.gameInfoEndpoint, config.screenEndpoint, container.clientWidth, container.clientHeight);
     const game = new Game(communication);
     const projectParty = new ProjectParty(container, game);
+
+    startGameButton.addEventListener('click', () => {
+       game.startGame();
+    });
 }

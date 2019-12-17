@@ -1,9 +1,9 @@
 import {Observable} from "rxjs";
 import {GameplayUpdate} from "./GameplayUpdate.interface";
-import {GameInfo} from "./GameInfo.interface";
+import {GameinfoUpdate} from "./GamenfoUpdate.interface";
 
 export interface GameCommunicationInterface {
-    gameinfoUpdates: Observable<GameInfo>;
+    gameinfoUpdates: Observable<GameinfoUpdate>;
     gameplayUpdates: Observable<GameplayUpdate>;
     startGameplayUpdates: (gameId: string) => void;
 }

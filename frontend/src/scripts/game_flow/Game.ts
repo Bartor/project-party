@@ -17,23 +17,24 @@ export class Game {
     private graphicsSubject = new Subject<DisplayObject[]>();
     public graphicsUpdates = this.graphicsSubject.asObservable();
 
-    private readonly playerLimit: number;
+    public gameId: string;
 
-    constructor(communicationService: GameCommunicationInterface, playerLimit: number = 8) {
-        this.playerLimit = playerLimit;
-
+    constructor(
+        private communicationService: GameCommunicationInterface,
+        private readonly playerLimit: number = 8
+    ) {
         communicationService.gameinfoUpdates.subscribe(update => {
             console.log('Got a gameinfo update', update);
             switch (update.command) {
                 case GameinfoCommand.NEW_PLAYER:
                     const player = new Player(
-                        Math.floor(Math.random()*0xffffff),
-                        20
+                        Math.floor(Math.random() * 0xffffff),
+                        10
                     );
                     this.addPlayer(update.params as string, player);
                     break;
                 case GameinfoCommand.NEW_GAME:
-                    communicationService.startGameplayUpdates(update.params as string);
+                    this.gameId = update.params as string;
                     break;
                 case GameinfoCommand.NEW_ROUND:
                     this.players.forEach(player => player.state = PlayerState.ALIVE);
@@ -50,15 +51,17 @@ export class Game {
                     this.graphicsSubject.next(normalGraphics);
                     this.round = new Round(this.players, map, communicationService.gameplayUpdates);
                     this.round.projectileUpdates.subscribe(update => {
-                        this.graphicsSubject.next([...normalGraphics, ...update]); // wow so smart xDDDDD
+                        this.graphicsSubject.next([...normalGraphics, ...update]);
                     });
                     break;
                 case GameinfoCommand.SCOREBOARD_UPDATE:
                     break;
             }
-
-
         });
+    }
+
+    public startGame() {
+        this.communicationService.startGameplayUpdates(this.gameId);
     }
 
     public addPlayer(name: string, player: Player) {
