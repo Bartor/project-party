@@ -63,6 +63,8 @@ func (p *Player) shoot(shotAngle int) {
 
 func (p *Player) kill() {
 	p.alive = false
-	time.Sleep(3 * time.Second)
-	p.alive = true
+	go func() {
+		time.Sleep(3 * time.Second)
+		p.alive = true
+	}()
 }
