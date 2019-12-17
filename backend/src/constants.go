@@ -1,9 +1,9 @@
 package main
 
 import (
-	"time"
-	"net/http"
 	"github.com/gorilla/websocket"
+	"net/http"
+	"time"
 )
 
 const (
@@ -21,10 +21,10 @@ const (
 
 	// GAME RELATED CONSTANTS
 	// The speed at which the shot will travel
-	globalShotSpeed = 10
+	globalShotSpeed = 10.0 / 800.0
 
 	// The speed at which players will walk
-	globalMoveSpeed = 5
+	globalMoveSpeed = 5.0 / 800.0
 )
 
 var (
@@ -36,6 +36,6 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-        return true
-    },
+		return true
+	},
 }
