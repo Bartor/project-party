@@ -1,6 +1,7 @@
 import {Application} from 'pixi.js';
 import {Game} from "./game_flow/Game";
 import DisplayObject = PIXI.DisplayObject;
+import {DOTS_PER_DIMENSION, PLAYER_SIZE} from "../config/config";
 
 export class ProjectParty {
     private app: Application;
@@ -14,6 +15,10 @@ export class ProjectParty {
             width: biggerDimension
         });
         container.appendChild(this.app.view);
+
+        game.playerSize = (PLAYER_SIZE/DOTS_PER_DIMENSION)*biggerDimension;
+        game.communicationService.resizeDimensions.height = biggerDimension;
+        game.communicationService.resizeDimensions.width = biggerDimension;
 
         let mapGraphics: DisplayObject[] = [];
         let playerGraphics: DisplayObject[] = [];

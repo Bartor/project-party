@@ -29,12 +29,14 @@ export class GameCommunication implements GameCommunicationInterface {
     private gameplaySubject = new Subject<GameplayUpdate>();
     public gameplayUpdates = this.gameplaySubject.asObservable();
 
+    public readonly resizeDimensions = {
+        width: 1,
+        height: 1
+    };
+
     constructor(
         roundAddress: string,
         private gameplayAddress: string,
-
-        private width: number,
-        private height: number
     ) {
         this.gameinfoWebSocket = new WebSocketSubject({
             url: roundAddress,
@@ -67,12 +69,12 @@ export class GameCommunication implements GameCommunicationInterface {
                 const playerPositions = new Map<string, RotatedPosition>();
                 if (parts[1] !== '') {
                     for (let player of parts[1].split(',') || []) {
-                        const res = parseRotatedPosition(player, this.width, this.height);
+                        const res = parseRotatedPosition(player, this.resizeDimensions.width, this.resizeDimensions.height);
                         console.log(res);
                         playerPositions.set(res.id, res);
                     }
                 }
-                const map = JSON.parse(parts[2]).walls.map((obs: number[]) => obs.map((pos, i) => i % 2 ? pos * this.width : pos * this.height));
+                const map = JSON.parse(parts[2]).walls.map((obs: number[]) => obs.map((pos, i) => i % 2 ? pos * this.resizeDimensions.width : pos * this.resizeDimensions.height));
                 this.gameinfoSubject.next({
                     command: GameinfoCommand.NEW_ROUND,
                     params: {
@@ -105,14 +107,14 @@ export class GameCommunication implements GameCommunicationInterface {
 
         if (players !== '') {
             for (let player of players.split(',') || []) {
-                const res = parseRotatedPosition(player, this.width, this.height);
+                const res = parseRotatedPosition(player, this.resizeDimensions.width, this.resizeDimensions.height);
                 playerPositions.set(res.id, res);
             }
         }
 
         if (projectiles !== '') {
             for (let projectile of projectiles.split(',') || []) {
-                const res = parseRotatedPosition(projectile, this.width, this.height);
+                const res = parseRotatedPosition(projectile, this.resizeDimensions.width, this.resizeDimensions.height);
                 projectilePositions.set(res.id, res);
             }
         }

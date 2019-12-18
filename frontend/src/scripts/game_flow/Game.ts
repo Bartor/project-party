@@ -8,6 +8,7 @@ import {Subject} from "rxjs";
 import {GameinfoCommand} from "../shared/enums/GameinfoCommand.enum";
 import {RoundState} from "../shared/interfaces/RoundState.interface";
 import {GraphicsUpdate} from "../shared/interfaces/GraphicsUpdate.interface";
+import {PLAYER_COLORS} from "../../config/config";
 
 export class Game {
     private round: Round;
@@ -18,18 +19,19 @@ export class Game {
     public graphicsUpdates = this.graphicsSubject.asObservable();
 
     public gameId: string;
+    public playerSize: number = 20;
 
     constructor(
-        private communicationService: GameCommunicationInterface,
-        private readonly playerLimit: number = 8
+        public readonly communicationService: GameCommunicationInterface,
+        private readonly playerLimit: number = 8,
     ) {
         communicationService.gameinfoUpdates.subscribe(update => {
             console.log('Got a gameinfo update', update);
             switch (update.command) {
                 case GameinfoCommand.NEW_PLAYER:
                     const player = new Player(
-                        Math.floor(Math.random() * 0xffffff),
-                        10
+                        PLAYER_COLORS[Number(update.params) % PLAYER_COLORS.length],
+                        this.playerSize
                     );
                     this.addPlayer(update.params as string, player);
                     break;

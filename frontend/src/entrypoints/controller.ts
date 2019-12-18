@@ -5,7 +5,7 @@ import '../helper/notifications/default.scss';
 import {NotificationManager} from "../helper/notifications/NotificationManager";
 import {Controller} from "../scripts/Controller";
 import {ControllerCommunication} from "../scripts/communication/ControllerCommunication.class";
-import {config} from "../config/config";
+import {ENDPOINTS} from "../config/config";
 
 // programically prevent pinch zooming
 window.addEventListener('touchstart', event => {
@@ -36,7 +36,7 @@ function joinGame(gameId: number) {
 
     while (container.firstChild) container.removeChild(container.firstChild);
 
-    const communication = new ControllerCommunication(config.controllerEndpoint + `?id=${gameId}`, 50);
+    const communication = new ControllerCommunication(ENDPOINTS.controllerEndpoint + `?id=${gameId}`, 50);
     const controller = new Controller(container, communication);
     controller.drawLoop();
 }
