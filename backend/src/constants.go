@@ -30,6 +30,7 @@ const (
 
 	// The speed at which players will walk
 	globalMoveSpeed = 80.0 / 800.0 * timeFactor 
+	slowDown = 3.5*globalMoveSpeed
 
 	playerRadius = 0.020
 	unitSize = 0.00125
