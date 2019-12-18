@@ -19,18 +19,21 @@ const (
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
 
+	fastRefresh = 15000000
+	slowRefresh = 100000000
+	refresh = fastRefresh
+	timeFactor = float64(refresh)/1000000000.0
+
 	// GAME RELATED CONSTANTS
 	// The speed at which the shot will travel
-	globalShotSpeed = 10.0 / 800.0
+	globalShotSpeed = 110.0 / 800.0 * timeFactor
 
 	// The speed at which players will walk
-	globalMoveSpeed = 5.0 / 800.0
+	globalMoveSpeed = 80.0 / 800.0 * timeFactor 
+	slowDown = 3.5*globalMoveSpeed
 
 	playerRadius = 0.020
 	unitSize = 0.00125
-
-	fastRefresh = 15000000
-	slowRefresh = 100000000
 )
 
 var (

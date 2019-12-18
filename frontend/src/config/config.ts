@@ -1,4 +1,4 @@
-const WEBSOCKET_ADDRESS = 'localhost';
+const WEBSOCKET_ADDRESS = '192.168.0.228';
 const WEBSOCKET_PORT = 8080;
 const WEBSOCKET_ENDPOINTS: {[endpoint: string]: string} = {
     CONTROLLER: 'controllerWs',

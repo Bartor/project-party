@@ -14,6 +14,7 @@ type Player struct {
 	angle      int
 	eventQueue []*PlayerEvent
 	alive      bool
+	currSpeed  float64
 }
 
 type PlayerEvent struct {
@@ -27,26 +28,40 @@ func (p *Player) queueEvent(moveSpeed float64, moveAngle int, shotAngle int) {
 }
 
 func (p *Player) processLastEvent() {
+	var moveSpeed float64
+	var moveAngle int
+
 	if len(p.eventQueue) == 0 {
-		return
+		p.currSpeed = math.Max(p.currSpeed - slowDown, 0)
+		moveSpeed = p.currSpeed
+		moveAngle = p.angle
+	} else {
+		currEvent := p.eventQueue[len(p.eventQueue)-1]
+		moveSpeed = currEvent.moveSpeed
+		moveAngle = currEvent.moveAngle
+
+		if (p.alive) {
+			p.shoot(currEvent.shotAngle)
+		}
 	}
 
-	currEvent := p.eventQueue[len(p.eventQueue)-1]
 	if p.alive {
-		p.move(currEvent.moveSpeed, currEvent.moveAngle)
-		p.shoot(currEvent.shotAngle)
+		p.move(moveSpeed, moveAngle)
 	}
 	p.eventQueue = nil
 }
 
 func (p *Player) move(moveSpeed float64, moveAngle int) {
-	if moveSpeed < 0 {
+	if moveSpeed <= 0 {
 		return
 	}
 
+	p.angle = moveAngle
+	p.currSpeed = moveSpeed
+
 	// fmt.Printf("Player moving at speed %f at angle %d\n", moveSpeed, moveAngle)
-	newXPos := moveSpeed*globalMoveSpeed*math.Cos(float64(moveAngle)*math.Pi/180.0) + p.xPos
-	newYPos := moveSpeed*globalMoveSpeed*math.Sin(float64(moveAngle)*math.Pi/180.0) + p.yPos
+	newXPos := moveSpeed*globalMoveSpeed*math.Cos(float64(p.angle)*math.Pi/180.0) + p.xPos
+	newYPos := moveSpeed*globalMoveSpeed*math.Sin(float64(p.angle)*math.Pi/180.0) + p.yPos
 
 	for _, wall := range p.game.mapData.Walls {
 		for i := 0; i < len(wall)-1; i += 2 {
@@ -67,7 +82,6 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 
 	p.xPos = newXPos
 	p.yPos = newYPos
-	p.angle = moveAngle
 }
 
 func (p *Player) shoot(shotAngle int) {
