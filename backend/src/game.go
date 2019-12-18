@@ -132,7 +132,7 @@ func (g *Game) run() {
 			g.controllers[controller] = true
 			startingXPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].X
 			startingYPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].Y
-			newPlayer := &Player{g, len(g.players), startingXPos, startingYPos, 0, make([]*PlayerEvent, 0), true}
+			newPlayer := &Player{g, len(g.players), startingXPos, startingYPos, 0, make([]*PlayerEvent, 0), true, 0}
 			g.players[controller] = newPlayer
 			select {
 			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d", newPlayer.id)):
@@ -213,7 +213,7 @@ func processPlayerMessage(message string) (int, float64, int) {
 }
 
 func processGameEvents(g *Game) {
-	for range time.Tick(time.Nanosecond * fastRefresh) {
+	for range time.Tick(time.Nanosecond * refresh) {
 		for i := range g.shots {
 			currShot := g.shots[i]
 			currShot.move()

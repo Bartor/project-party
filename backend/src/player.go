@@ -14,6 +14,7 @@ type Player struct {
 	angle      int
 	eventQueue []*PlayerEvent
 	alive      bool
+	currSpeed  float64
 }
 
 type PlayerEvent struct {
