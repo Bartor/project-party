@@ -32,7 +32,7 @@ export class ControllerCommunication {
     private sendAndReset() {
         const packet = this.createDataPacket();
         if (packet !== '') {
-            console.log('Sending...', packet);
+            // console.log('Sending...', packet);
             this.websocket.next(packet);
             this.recentAction.move.speed = -1;
             this.recentAction.move.direction = -1;

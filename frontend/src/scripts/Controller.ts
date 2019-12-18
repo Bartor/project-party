@@ -35,7 +35,9 @@ export class Controller {
         this.centerShootTouch = {...this.centerShoot};
         this.centerMoveTouch = {...this.centerMove};
 
+        this.canvas.addEventListener('touchmove', event => event.preventDefault());
         this.canvas.addEventListener('pointerdown', event => {
+            event.preventDefault();
             let idx = this.pointers.findIndex(e => e.pointerId === event.pointerId);
             if (idx === -1) {
                 this.pointers.push(Object.assign(event, {controlType: null}));
@@ -45,6 +47,7 @@ export class Controller {
             this.handleInput();
         });
         this.canvas.addEventListener('pointerup', event => {
+            event.preventDefault();
             let idx = this.pointers.findIndex(e => e.pointerId === event.pointerId);
             if (idx !== 1) this.pointers.splice(idx, 1);
             this.handleInput();
@@ -55,6 +58,7 @@ export class Controller {
             this.handleInput();
         });
         this.canvas.addEventListener('pointermove', event => {
+            event.preventDefault();
             let idx = this.pointers.findIndex(e => e.pointerId === event.pointerId);
             if (idx !== -1) this.pointers[idx] = Object.assign(event, {controlType: this.pointers[idx].controlType});
             this.handleInput();
