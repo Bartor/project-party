@@ -130,7 +130,9 @@ func (g *Game) run() {
 		select {
 		case controller := <-g.registerController:
 			g.controllers[controller] = true
-			newPlayer := &Player{g, len(g.players), 0.5, 0.5, 0, make([]*PlayerEvent, 0), true}
+			startingXPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].X
+			startingYPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].Y
+			newPlayer := &Player{g, len(g.players), startingXPos, startingYPos, 0, make([]*PlayerEvent, 0), true}
 			g.players[controller] = newPlayer
 			select {
 			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d", newPlayer.id)):
@@ -211,7 +213,7 @@ func processPlayerMessage(message string) (int, float64, int) {
 }
 
 func processGameEvents(g *Game) {
-	for range time.Tick(time.Nanosecond * 50000000) {
+	for range time.Tick(time.Nanosecond * fastRefresh) {
 		for i := range g.shots {
 			currShot := g.shots[i]
 			currShot.move()
@@ -235,7 +237,7 @@ func processGameEvents(g *Game) {
 			currShot := g.shots[i]
 			for i := range g.players {
 				currPlayer := g.players[i]
-				if math.Abs(currShot.xPos-currPlayer.xPos) < 0.025 && math.Abs(currShot.yPos-currPlayer.yPos) < 0.025 && currShot.owner.id != currPlayer.id {
+				if math.Abs(currShot.xPos-currPlayer.xPos) < 0.025 && math.Abs(currShot.yPos-currPlayer.yPos) < 0.025 && currShot.owner.id != currPlayer.id && currPlayer.alive {
 					currPlayer.kill()
 					fmt.Println("Played with id ", currPlayer.id, " killed")
 				}
@@ -250,12 +252,12 @@ func removeShot(s []*Shot, i int) []*Shot {
 }
 
 func processEvents(g *Game) {
-	for range time.Tick(time.Nanosecond * 100000000) {
+	for range time.Tick(time.Nanosecond * fastRefresh) {
 		if g.screen != nil {
 			updateString := g.getPlayerPositions()
 			updateString += ":"
 			updateString += g.getShotPositions()
-			fmt.Println(updateString)
+			// fmt.Println(updateString)
 			g.screen.input <- []byte(updateString)
 		}
 	}

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"math"
 	"time"
 )
@@ -44,22 +44,26 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 		return
 	}
 
-	fmt.Printf("Player moving at speed %f at angle %d\n", moveSpeed, moveAngle)
+	// fmt.Printf("Player moving at speed %f at angle %d\n", moveSpeed, moveAngle)
 	newXPos := moveSpeed*globalMoveSpeed*math.Cos(float64(moveAngle)*math.Pi/180.0) + p.xPos
 	newYPos := moveSpeed*globalMoveSpeed*math.Sin(float64(moveAngle)*math.Pi/180.0) + p.yPos
 
-	// for _, wall := range p.game.mapData.Walls {
-	// 	for i := 0; i < len(wall); i += 2 {
-	// 		xPosA := wall[i]
-	// 		yPosA := wall[i+1]
-	// 		xPosB := wall[(i+2)%len(wall)]
-	// 		yPosB := wall[(i+3)%len(wall)]
-	// 		if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, newXPos, newYPos, playerRadius) {
-	// 			fmt.Println("Found collision with wall of index ", i)
-	// 			return
-	// 		}
-	// 	}
-	// }
+	for _, wall := range p.game.mapData.Walls {
+		for i := 0; i < len(wall)-1; i += 2 {
+			xPosA := wall[i]
+			yPosA := wall[i+1]
+			xPosB := wall[(i+2)%len(wall)]
+			yPosB := wall[(i+3)%len(wall)]
+			if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, newXPos, newYPos, playerRadius) {
+				// fmt.Println("Found collision with wall of index ", i)
+				// fmt.Println("Wall coordinates", wall)
+				// fmt.Println("Point X coordinates", wall[i], wall[i+1])
+				// fmt.Println("Point Y coordinates", wall[i+2], wall[i+3])
+				// fmt.Println("Player coordinates after moving and radius", newXPos, newYPos, playerRadius)
+				return
+			}
+		}
+	}
 
 	p.xPos = newXPos
 	p.yPos = newYPos
@@ -71,7 +75,7 @@ func (p *Player) shoot(shotAngle int) {
 		return
 	}
 
-	fmt.Printf("Player shooting at angle %d\n", shotAngle)
+	// fmt.Printf("Player shooting at angle %d\n", shotAngle)
 	currShot := &Shot{p.game.shotsFired + 1, p, p.xPos + math.Cos(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed, p.yPos + math.Sin(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed, shotAngle}
 	p.game.shots = append(p.game.shots, currShot)
 	p.game.shotsFired++

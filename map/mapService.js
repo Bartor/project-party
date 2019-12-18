@@ -4,6 +4,18 @@ const MapGenerator = require('./generator/mapGenerator.js')
 const MeshGenerator = require('./generator/meshGenerator.js')
 const port = 3000
 
+function isNeighbourWall(x, y, map) {
+    for(var neighbourX = x - 1; neighbourX <= x + 1; neighbourX++) {
+        for (var neighbourY = y - 1; neighbourY <= y + 1; neighbourY++) {
+            // If any neighbour is a wall, return true
+            if (map[neighbourX][neighbourY] === 1) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
 app.get('/', (req, res) => res.send('You can generate a random map using this service'))
 app.get('/generate', (req, res) => {
     var { width, height, fillPercentage } = req.query
@@ -32,8 +44,25 @@ app.get('/generate', (req, res) => {
             return res
         }, []))
 
+        // Create a new array of the same size as the map
+        var processedMap = [...Array(map.width)].map(x => Array(map.height).fill(1))
+        var spawnPoints = []
+        for (var y = 1; y < processedMap.length - 1; y++) {
+            for (var x = 1; x < processedMap[0].length; x++) {
+                // Iterate over neighbours
+                if (map.map[y][x] === 0) {
+                    if (isNeighbourWall(x, y, map.map)) {
+                        processedMap[y][x] = 1
+                    } else {
+                        processedMap[y][x] = 0
+                        spawnPoints.push({x: (x+0.5)/(map.width), y: (y+0.5)/(map.height)})
+                    }
+                }
+            }
+        }
         res.status(200).json({
             map: map.map,
+            spawnPoints: spawnPoints,
             walls: outlines,
             error: null
         })
