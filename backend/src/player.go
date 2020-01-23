@@ -15,12 +15,17 @@ type Player struct {
 	eventQueue []*PlayerEvent
 	alive      bool
 	currSpeed  float64
+	is_reloading bool
 }
 
 type PlayerEvent struct {
 	moveSpeed float64
 	moveAngle int
 	shotAngle int
+}
+
+func NewPlayer(game *Game, xPos float64, yPos float64) *Player {
+	return &Player{game, len(game.players), xPos, yPos, 0, make([]*PlayerEvent, 0), true, 0, false}
 }
 
 func (p *Player) queueEvent(moveSpeed float64, moveAngle int, shotAngle int) {
@@ -85,6 +90,9 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 }
 
 func (p *Player) shoot(shotAngle int) {
+	if p.is_reloading {
+		return;
+	}
 	if shotAngle < 0 {
 		return
 	}
@@ -93,6 +101,12 @@ func (p *Player) shoot(shotAngle int) {
 	currShot := &Shot{p.game.shotsFired + 1, p, p.xPos + math.Cos(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed, p.yPos + math.Sin(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed, shotAngle}
 	p.game.shots = append(p.game.shots, currShot)
 	p.game.shotsFired++
+
+	p.is_reloading = true;
+	go func(){
+		time.Sleep(reloadTime);
+		p.is_reloading = false;
+	}()
 
 }
 

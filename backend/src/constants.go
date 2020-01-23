@@ -34,6 +34,8 @@ const (
 
 	playerRadius = 0.020
 	unitSize = 0.00125
+
+	reloadTime = 300 * time.Millisecond
 )
 
 var (
