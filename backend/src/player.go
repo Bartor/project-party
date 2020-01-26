@@ -90,8 +90,8 @@ func (p *Player) shoot(shotAngle int) {
 	}
 
 	// fmt.Printf("Player shooting at angle %d\n", shotAngle)
-	currShot := &Shot{p.game.shotsFired + 1, p, p.xPos + math.Cos(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed, p.yPos + math.Sin(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed, shotAngle}
-	p.game.shots = append(p.game.shots, currShot)
+	currShot := Shot{p.game.shotsFired + 1, p, p.xPos + math.Cos(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed, p.yPos + math.Sin(float64(shotAngle)*math.Pi/180.0)*globalShotSpeed, shotAngle}
+	p.game.shotBank.addShot <- currShot
 	p.game.shotsFired++
 
 }

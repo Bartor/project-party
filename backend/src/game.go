@@ -30,7 +30,8 @@ type Game struct {
 	unregisterGameInfo chan bool
 
 	players    map[*Controller]*Player
-	shots      []*Shot
+	// shots      []*Shot
+	shotBank		ShotBank
 	shotsFired uint64
 	mapData    Map
 }
@@ -66,7 +67,8 @@ func newGame() (*Game, error) {
 		registerGameInfo:     make(chan *GameInfo),
 		unregisterGameInfo:   make(chan bool),
 		players:              make(map[*Controller]*Player),
-		shots:                make([]*Shot, 0),
+		// shots:                make([]*Shot, 0),
+		shotBank:							NewShotBank(),
 		shotsFired:           0,
 	}, nil
 }
@@ -99,10 +101,13 @@ func (g *Game) getPlayerPositions() string {
 }
 
 func (g *Game) getShotPositions() string {
+	shotsChan := make(chan []Shot)
+	g.shotBank.getShots<- GetShotsRequest{shotsChan}
+	shots := <-shotsChan
 	result := ""
-	if len(g.shots) > 0 {
-		for i := range g.shots {
-			currShot := g.shots[i]
+	if len(shots) > 0 {
+		for i := range shots {
+			currShot := shots[i]
 			if currShot.xPos <= 1.5 && currShot.xPos >= -0.5 && currShot.yPos >= -0.5 && currShot.yPos <= 1.5 {
 				result += fmt.Sprintf("%d/%f/%f/%d,", currShot.id, currShot.xPos, currShot.yPos, currShot.angle)
 			}
@@ -124,6 +129,7 @@ func (g *Game) run() {
 
 	g.mapData = loadedMap
 
+	go g.shotBank.Run()
 	go processEvents(g)
 	go processGameEvents(g)
 	for {
@@ -214,27 +220,24 @@ func processPlayerMessage(message string) (int, float64, int) {
 
 func processGameEvents(g *Game) {
 	for range time.Tick(time.Nanosecond * refresh) {
-		for i := range g.shots {
-			currShot := g.shots[i]
-			currShot.move()
-		}
-
-		// for i := 0; i < len(g.shots); {
-		// 	currShot := g.shots[i]
-		// 	if currShot.xPos >= 1 || currShot.xPos <= 0 || currShot.yPos >= 1 || currShot.yPos <= 0 {
-		// 		g.shots = removeShot(g.shots, i)
-		// 	} else {
-		// 		i++
-		// 	}
-		// }
-
 		for i := range g.players {
 			currPlayer := g.players[i]
 			currPlayer.processLastEvent()
 		}
 
-		for i := range g.shots {
-			currShot := g.shots[i]
+		g.shotBank.moveShots <- true
+
+		shotsChan := make(chan []Shot)
+		g.shotBank.getShots<- GetShotsRequest{shotsChan}
+		shots := <-shotsChan
+
+		for _, currShot := range shots {
+			if currShot.xPos >= 1 || currShot.xPos <= 0 || currShot.yPos >= 1 || currShot.yPos <= 0 {
+				g.shotBank.deleteShot <- currShot.id
+			}
+		}
+
+		for _, currShot := range shots {
 			for i := range g.players {
 				currPlayer := g.players[i]
 				if math.Abs(currShot.xPos-currPlayer.xPos) < 0.025 && math.Abs(currShot.yPos-currPlayer.yPos) < 0.025 && currShot.owner.id != currPlayer.id && currPlayer.alive {
@@ -244,11 +247,6 @@ func processGameEvents(g *Game) {
 			}
 		}
 	}
-}
-
-func removeShot(s []*Shot, i int) []*Shot {
-	s[len(s)-1], s[i] = s[i], s[len(s)-1]
-	return s[:len(s)-1]
 }
 
 func processEvents(g *Game) {
