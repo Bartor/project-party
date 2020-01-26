@@ -235,6 +235,18 @@ func processGameEvents(g *Game) {
 			if currShot.xPos >= 1 || currShot.xPos <= 0 || currShot.yPos >= 1 || currShot.yPos <= 0 {
 				g.shotBank.deleteShot <- currShot.id
 			}
+
+			for _, wall := range g.mapData.Walls {
+				for i := 0; i < len(wall)-1; i += 2 {
+					xPosA := wall[i]
+					yPosA := wall[i+1]
+					xPosB := wall[(i+2)%len(wall)]
+					yPosB := wall[(i+3)%len(wall)]
+					if g.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, currShot.xPos, currShot.yPos, unitSize) {
+						g.shotBank.deleteShot <- currShot.id
+					}
+				}
+			}
 		}
 
 		for _, currShot := range shots {
@@ -242,6 +254,7 @@ func processGameEvents(g *Game) {
 				currPlayer := g.players[i]
 				if math.Abs(currShot.xPos-currPlayer.xPos) < 0.025 && math.Abs(currShot.yPos-currPlayer.yPos) < 0.025 && currShot.owner.id != currPlayer.id && currPlayer.alive {
 					currPlayer.kill()
+					g.shotBank.deleteShot <- currShot.id
 					fmt.Println("Played with id ", currPlayer.id, " killed")
 				}
 			}
