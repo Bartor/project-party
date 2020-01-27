@@ -132,7 +132,7 @@ func (g *Game) run() {
 			g.controllers[controller] = true
 			startingXPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].X
 			startingYPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].Y
-			newPlayer := &Player{g, len(g.players), startingXPos, startingYPos, 0, make([]*PlayerEvent, 0), true, 0}
+			newPlayer := NewPlayer(g, startingXPos, startingYPos)
 			g.players[controller] = newPlayer
 			select {
 			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d", newPlayer.id)):
