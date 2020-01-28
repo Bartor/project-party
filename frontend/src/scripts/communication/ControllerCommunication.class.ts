@@ -12,7 +12,8 @@ export class ControllerCommunication {
     constructor(address: string, private tickrate: number) {
         this.websocket = new WebSocketSubject({
             url: address,
-            serializer: value => value
+            serializer: value => value,
+            deserializer: value => value.toString()
         });
         this.ticker = setInterval(() => {
             this.sendAndReset();

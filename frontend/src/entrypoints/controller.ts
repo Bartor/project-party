@@ -36,7 +36,7 @@ window.addEventListener('load', () => {
 function joinGame(gameId: number, nick: string) {
     const container = document.querySelector('main');
 
-    const communication = new ControllerCommunication(ENDPOINTS.controllerEndpoint + `?id=${gameId}&nickname=${nick}`, 50);
+    const communication = new ControllerCommunication(ENDPOINTS.controllerEndpoint + `?id=${gameId}&nick=${nick}`, 50);
     communication.connect().then(() => {
         notifications.notify(`Joining game ${gameId}`);
         while (container.firstChild) container.removeChild(container.firstChild);

@@ -25,9 +25,9 @@ function startGame() {
     const notifications = new NotificationManager(notificationContainer);
 
     const communication = new GameCommunication(ENDPOINTS.gameInfoEndpoint, ENDPOINTS.screenEndpoint);
+    const game = new Game(communication);
 
     communication.connect().then(() => {
-        const game = new Game(communication);
         const projectParty = new ProjectParty(container, game);
 
         game.gameStatus.subscribe(updateScoreboard);

@@ -38,6 +38,7 @@ export class Game {
                     break;
                 case GameinfoCommand.NEW_GAME:
                     this.gameId = update.params as string;
+                    console.log(this.gameId);
                     break;
                 case GameinfoCommand.NEW_ROUND:
                     this.players.forEach(player => player.state = PlayerState.ALIVE);
@@ -111,6 +112,6 @@ export class Game {
         this.players.forEach((player, id) => {
             this.statuses.get(id).state = player.state;
         });
-        this.gameStatusUpdateSubject.next([...this.statuses.values()]);
+        this.gameStatusUpdateSubject.next([...this.statuses.values()].sort((a, b) => b.score - a.score));
     }
 }

@@ -69,6 +69,7 @@ export class GameCommunication implements GameCommunicationInterface {
 
         switch (command) {
             case 'NewGame':
+                console.log(parts);
                 const gameId = parts[1];
                 this.gameinfoSubject.next({
                     command: GameinfoCommand.NEW_GAME,
