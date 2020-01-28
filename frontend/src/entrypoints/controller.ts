@@ -12,12 +12,14 @@ window.addEventListener('touchstart', event => {
     if (event.touches.length > 1) event.preventDefault();
 });
 
+let notifications : NotificationManager;
+
 window.addEventListener('load', () => {
     const notificationContainer = document.getElementById('notifications');
     const button = document.getElementById('join-button') as HTMLButtonElement;
     const gameIdInput = document.getElementById('game-id-input') as HTMLInputElement;
 
-    const notifications = new NotificationManager(notificationContainer);
+    notifications = new NotificationManager(notificationContainer);
 
     button.addEventListener('click', () => {
         let id = gameIdInput.value;
@@ -34,9 +36,12 @@ window.addEventListener('load', () => {
 function joinGame(gameId: number) {
     const container = document.querySelector('main');
 
-    while (container.firstChild) container.removeChild(container.firstChild);
-
     const communication = new ControllerCommunication(ENDPOINTS.controllerEndpoint + `?id=${gameId}`, 50);
-    const controller = new Controller(container, communication);
-    controller.drawLoop();
+    communication.connect().then(() => {
+        while (container.firstChild) container.removeChild(container.firstChild);
+        const controller = new Controller(container, communication);
+        controller.drawLoop();
+    }).catch(() => {
+        notifications.notify('Connection error');
+    });
 }

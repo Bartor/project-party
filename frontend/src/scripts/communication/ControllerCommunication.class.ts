@@ -14,10 +14,24 @@ export class ControllerCommunication {
             url: address,
             serializer: value => value
         });
-        this.websocket.subscribe();
         this.ticker = setInterval(() => {
             this.sendAndReset();
-        }, 1000/tickrate);
+        }, 1000 / tickrate);
+    }
+
+    public connect(): Promise<null> {
+        return new Promise((resolve, reject) => {
+            this.websocket.subscribe(() => {
+                console.log('2') // todo FIX
+                resolve(null);
+            }, err => {
+                clearInterval(this.ticker);
+                this.websocket.unsubscribe();
+                reject(null);
+            }, () => {
+                console.log('1');
+            });
+        });
     }
 
     private createDataPacket(): string {
@@ -32,7 +46,6 @@ export class ControllerCommunication {
     private sendAndReset() {
         const packet = this.createDataPacket();
         if (packet !== '') {
-            // console.log('Sending...', packet);
             this.websocket.next(packet);
             this.recentAction.move.speed = -1;
             this.recentAction.move.direction = -1;

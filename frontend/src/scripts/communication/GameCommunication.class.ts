@@ -96,6 +96,13 @@ export class GameCommunication implements GameCommunicationInterface {
                     params: ''
                 });
                 break;
+            case 'EndRound':
+                const winnerId = parts[1];
+                this.gameinfoSubject.next({
+                   command: GameinfoCommand.END_ROUND,
+                   params: winnerId
+                });
+                break;
         }
     }
 
