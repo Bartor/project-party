@@ -32,7 +32,6 @@ export class Round {
                     projectile.marked = true;
                     projectile.toRotatedPosition(position);
                 } else {
-                    this.projectileSubject.next([...this.projectiles.values()].map(p => p.getGraphics()));
                     this.projectiles.set(name, new Projectile(10).toRotatedPosition(position));
                 }
             });
@@ -44,7 +43,8 @@ export class Round {
                 if (!projectile.marked) {
                     this.projectiles.delete(name);
                 }
-            })
+            });
+            this.projectileSubject.next([...this.projectiles.values()].map(p => p.getGraphics()));
         });
     }
 }

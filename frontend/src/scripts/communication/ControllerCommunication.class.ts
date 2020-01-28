@@ -3,7 +3,7 @@ import Timeout = NodeJS.Timeout;
 
 export class ControllerCommunication {
     private websocket: WebSocketSubject<string>;
-    private ticker: Timeout;
+    private readonly ticker: Timeout;
     private recentAction = {
         move: {speed: -1, direction: -1},
         shoot: {direction: -1}
@@ -12,12 +12,24 @@ export class ControllerCommunication {
     constructor(address: string, private tickrate: number) {
         this.websocket = new WebSocketSubject({
             url: address,
-            serializer: value => value
+            serializer: value => value,
+            deserializer: value => value.toString()
         });
-        this.websocket.subscribe();
         this.ticker = setInterval(() => {
             this.sendAndReset();
-        }, 1000/tickrate);
+        }, 1000 / tickrate);
+    }
+
+    public connect(): Promise<string> {
+        return new Promise((resolve, reject) => {
+            this.websocket.subscribe(msg => {
+                resolve(msg);
+            }, err => {
+                clearInterval(this.ticker);
+                this.websocket.unsubscribe();
+                reject(err);
+            });
+        });
     }
 
     private createDataPacket(): string {
@@ -32,7 +44,6 @@ export class ControllerCommunication {
     private sendAndReset() {
         const packet = this.createDataPacket();
         if (packet !== '') {
-            // console.log('Sending...', packet);
             this.websocket.next(packet);
             this.recentAction.move.speed = -1;
             this.recentAction.move.direction = -1;
