@@ -37,6 +37,8 @@ const (
 
 	reloadTime = 300 * time.Millisecond
 	roundBreakTime = 3 * time.Second
+
+	lastManStandingPrize = 4
 )
 
 var (

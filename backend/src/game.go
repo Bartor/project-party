@@ -286,6 +286,7 @@ func processGameEvents(g *Game) {
 				if math.Abs(currShot.xPos-currPlayer.xPos) < playerRadius && math.Abs(currShot.yPos-currPlayer.yPos) < playerRadius && currShot.owner.id != currPlayer.id && currPlayer.alive {
 					currPlayer.kill()
 					currShot.owner.score++
+					g.info.input <- g.getScoreBoardUpdate()
 					g.shotBank.deleteShot <- currShot.id
 					fmt.Println("Played with id ", currPlayer.id, " killed")
 				}
@@ -294,26 +295,41 @@ func processGameEvents(g *Game) {
 	}
 }
 
-func (g *Game) checkRoundEnd() int {
-	victorAlive := -1
+func (g *Game) checkRoundEnd() *Player {
+	var victorAlive *Player = nil
 	for _, currPlayer := range g.players {
 		// currPlayer := g.players[i]
-		if (currPlayer.alive && victorAlive == -1) {
-			victorAlive = currPlayer.id
-		} else if (currPlayer.alive && victorAlive != -1) {
-			return -1
+		if (currPlayer.alive && victorAlive == nil) {
+			victorAlive = currPlayer
+		} else if (currPlayer.alive && victorAlive != nil) {
+			return nil
 		}
 	}
 	return victorAlive
+}
+
+func (g *Game) getScoreBoardUpdate() []byte {
+	result := []byte("ScoreboardUpdate::")
+	for _, player := range g.players {
+		result = append(result, []byte(fmt.Sprintf("%d/%d,", player.id, player.score))...)
+
+	}
+	if len(result) > 0 {
+		result = result[:len(result)-1]
+	}
+
+	return result
 }
 
 func processEvents(g *Game) {
 	for range time.Tick(time.Nanosecond * fastRefresh) {
 		if g.screen != nil {
 			victor := g.checkRoundEnd()
-			if victor != -1 {
-				fmt.Println("Sending info about end of round with victor with id ", victor)
-				g.screen.input <- []byte(fmt.Sprintf("EndRound::%d", victor))
+			if victor != nil {
+				fmt.Println("Sending info about end of round with victor with id ", victor.id)
+				g.screen.input <- []byte(fmt.Sprintf("EndRound::%d", victor.id))
+				victor.score += lastManStandingPrize
+				g.info.input <- g.getScoreBoardUpdate()
 				g.round()
 				return;
 			}
