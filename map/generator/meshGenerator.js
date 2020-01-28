@@ -1,22 +1,37 @@
+/**
+ * @class Class generating the mesh from a map returned by MapGenerator using marching squares algorithm. It's returned in the form of outlines representing walls.
+ */
 class MeshGenerator {
+    /**
+     * Creates an instance of the generator.
+     * 
+     * @constructor
+     * @param {Array} map Map (1 represents a wall square, 0 represents an empty square).
+     * @param {number} squareSize Size of the map square.
+     */
     constructor(map, squareSize) {
         this.squareGrid = new SquareGrid(map, squareSize)
         this.vertices = []
         this.vertices2 = []
-        
+
         this.triangleDictionary = new Map();    // vertexIndex -> [triangles]
         this.outlines = []
         this.checkedVertices = []
-        this.vertexIndices  = new Map(); // vertexIndex - > Vector
+        this.vertexIndices = new Map(); // vertexIndex - > Vector
 
         for (var x = 0; x < this.squareGrid.squares.length; x++) {
-			for (var y = 0; y < this.squareGrid.squares[0].length; y++) {
-				this.triangulateSquare(this.squareGrid.squares[x][y]);
-			}
-		}
+            for (var y = 0; y < this.squareGrid.squares[0].length; y++) {
+                this.triangulateSquare(this.squareGrid.squares[x][y]);
+            }
+        }
 
     }
 
+    /**
+     * Creates a contour from a single square by analyzing corners shared with other squares.
+     * 
+     * @param {Square} square Single map square.
+     */
     triangulateSquare(square) {
         switch (square.configuration) {
             case 0:
@@ -77,6 +92,11 @@ class MeshGenerator {
         }
     }
 
+    /**
+     * Creates mesh from points by adding appropriate triangles.
+     * 
+     * @param  {...any} points 
+     */
     meshFromPoints(...points) {
         this.assignVertices(points)
         // Add points representing triangles
@@ -91,6 +111,11 @@ class MeshGenerator {
 
     }
 
+    /**
+     * Extracts coordinates from mesh points and returns them as an array.
+     * 
+     * @returns {Array} List of points
+     */
     getTrianglePositions() {
         return this.vertices.reduce((array, vertex) => {
             array.push(vertex.x, vertex.y)
@@ -98,26 +123,44 @@ class MeshGenerator {
         }, [])
     }
 
+    /**
+     * Creates a triangle from the given points and assigns its indices to it in the dictionary.
+     * 
+     * @param {Vec} a 
+     * @param {Vec} b 
+     * @param {Vec} c 
+     */
     createTriangle(a, b, c) {
-        this.vertices.push(a,b,c)
+        this.vertices.push(a, b, c)
         var triangle = new Triangle(this.vertexIndices.get(a), this.vertexIndices.get(b), this.vertexIndices.get(c))
         this.addTriangleToDictionary(triangle.vertexIndexA, triangle)
         this.addTriangleToDictionary(triangle.vertexIndexB, triangle)
         this.addTriangleToDictionary(triangle.vertexIndexC, triangle)
     }
 
+    /**
+     * Adds positions of nodes in the array to the vertices array and assigns them an index.
+     * 
+     * @param {Array} points Array of nodes.
+     */
     assignVertices(points) {
-        for (var i=0; i< points.length; i+=1) {
-            //if not exists in map
-            if (!this.vertexIndices.has(points[i].position) ){
+        for (var i = 0; i < points.length; i += 1) {
+            //if does not exist in the map
+            if (!this.vertexIndices.has(points[i].position)) {
                 this.vertexIndices.set(points[i].position, this.vertices2.length)
                 this.vertices2.push(points[i].position)
             }
         }
     }
 
-    addTriangleToDictionary(vertexIndexKey, triangle){
-        if (this.triangleDictionary.has(vertexIndexKey)){
+    /**
+     * Adds a triangle to the list in the dictionary under the given key.
+     * 
+     * @param {number} vertexIndexKey 
+     * @param {Triangle} triangle 
+     */
+    addTriangleToDictionary(vertexIndexKey, triangle) {
+        if (this.triangleDictionary.has(vertexIndexKey)) {
             var triang = this.triangleDictionary.get(vertexIndexKey)
             triang.push(triangle)
             this.triangleDictionary.set(vertexIndexKey, triang)
@@ -127,31 +170,42 @@ class MeshGenerator {
         }
     }
 
-    //returns array of lists of consecutive vectors of walls of each shape 
+    /**
+     * Returns an array of lists of consecutive vectors of walls of each shape 
+     * 
+     * @returns {Array} Array of walls. 
+     * */
     calculateOutlines() {
-        for ( var vertexIndex = 0; vertexIndex < this.vertices2.length; vertexIndex +=1){
+        for (var vertexIndex = 0; vertexIndex < this.vertices2.length; vertexIndex += 1) {
             if (!this.checkedVertices.includes(vertexIndex)) {
                 var newOutlineVertex = this.getConnectedOutlineVertex(vertexIndex)
- 
-                if (newOutlineVertex != -1){
+
+                if (newOutlineVertex != -1) {
                     this.checkedVertices.push(vertexIndex)
-                    var newOutline=[vertexIndex]
+                    var newOutline = [vertexIndex]
                     this.outlines.push(newOutline)
-                    this.followOutline(newOutlineVertex, this.outlines.length-1)
-                    this.outlines[this.outlines.length-1].push(vertexIndex)
+                    this.followOutline(newOutlineVertex, this.outlines.length - 1)
+                    this.outlines[this.outlines.length - 1].push(vertexIndex)
                 }
             }
         }
         return this.outlinePoints()
     }
 
-    getConnectedOutlineVertex(vertexIndex){
+    /**
+     * Returns the next vertex index on an outline connected to the vertex of the given index.
+     * 
+     * @param {number} vertexIndex analyzed vertex index
+     * 
+     * @returns {number} -1 if there is no such vertex or the found vertex index.
+     */
+    getConnectedOutlineVertex(vertexIndex) {
         var trianglesContainingVertex = this.triangleDictionary.get(vertexIndex)
-        for (var k=0; k<trianglesContainingVertex.length; k++){
-            for (var i=0; i<3; i+=1){
+        for (var k = 0; k < trianglesContainingVertex.length; k++) {
+            for (var i = 0; i < 3; i += 1) {
                 var vertexB = trianglesContainingVertex[k].vertices[i]
-                if (vertexB != vertexIndex && !this.checkedVertices.includes(vertexB)){
-                     if (this.isOutlineEdge(vertexIndex, vertexB)) {
+                if (vertexB != vertexIndex && !this.checkedVertices.includes(vertexB)) {
+                    if (this.isOutlineEdge(vertexIndex, vertexB)) {
                         return vertexB
                     }
                 }
@@ -160,14 +214,19 @@ class MeshGenerator {
         return -1
     }
 
-    //checks whether line between A and B is an outline
-    isOutlineEdge(vertexA, vertexB){
+    /**
+     * Checks whether line between A and B is an outline.
+     * 
+     * @param {number} vertexA 
+     * @param {number} vertexB 
+     */
+    isOutlineEdge(vertexA, vertexB) {
         var trianglesContainingVertexA = this.triangleDictionary.get(vertexA)
         var sharedTriangleCount = 0
-        for (var i=0; i < trianglesContainingVertexA.length; i++) {
-            if ( trianglesContainingVertexA[i].containsVert(vertexB) ) {
-                sharedTriangleCount+=1
-                if ( sharedTriangleCount > 1) {
+        for (var i = 0; i < trianglesContainingVertexA.length; i++) {
+            if (trianglesContainingVertexA[i].containsVert(vertexB)) {
+                sharedTriangleCount += 1
+                if (sharedTriangleCount > 1) {
                     break
                 }
             }
@@ -175,16 +234,20 @@ class MeshGenerator {
         return sharedTriangleCount === 1
     }
 
-    //translates vector indices into (x,y)-coordinates
-    outlinePoints(){
+    /**
+     * Translates vector indices into (x, y) coordinates
+     * 
+     * @returns {Array} Array containing (x, y) coordinates of the outline points
+     */
+    outlinePoints() {
         var revDict = new Map()
         var iterator = this.vertexIndices.entries()
-        for (var val of iterator){
+        for (var val of iterator) {
             revDict.set(val[1], val[0])
         }
         var outP = []
-        for(var i=0; i<this.outlines.length; i++){
-            outP.push(this.outlines[i].map(x=> {
+        for (var i = 0; i < this.outlines.length; i++) {
+            outP.push(this.outlines[i].map(x => {
                 var p = revDict.get(x)
                 return { x: p.x, y: p.y }
             }))
@@ -192,25 +255,40 @@ class MeshGenerator {
         return outP
     }
 
-    //recursive function searching for a next vertex of an outline
-    followOutline(vertexIndex, outlineIndex){
+    /**
+     * Recursive function searching for the next vertex of an outline
+     * 
+     * @param {number} vertexIndex Index of the current vertex
+     * @param {number} outlineIndex Index of the current outline
+     */
+    followOutline(vertexIndex, outlineIndex) {
         this.outlines[outlineIndex].push(vertexIndex)
         this.checkedVertices.push(vertexIndex)
         var nextVertexIndex = this.getConnectedOutlineVertex(vertexIndex)
-        if (nextVertexIndex!=-1){
+        if (nextVertexIndex != -1) {
             this.followOutline(nextVertexIndex, outlineIndex)
         }
     }
 }
 
+/**
+ * @class Class containing the map in the form of a square grid.
+ */
 class SquareGrid {
+    /**
+     * Creates a square grid.
+     * 
+     * @constructor
+     * @param {Array} map Map (1 represents a wall square, 0 represents an empty square)
+     * @param {number} squareSize Size of the square
+     */
     constructor(map, squareSize) {
         var nodeCountX = map.length;
         var nodeCountY = map[0].length;
         var mapWidth = nodeCountX * squareSize;
         var mapHeight = nodeCountY * squareSize;
 
-        var controlNodes = [...Array(nodeCountX)].map(x => Array(nodeCountY).fill(null)) 
+        var controlNodes = [...Array(nodeCountX)].map(x => Array(nodeCountY).fill(null))
 
         // Convert every point from the original map and convert it to a node with an appropriate position
         for (var x = 0; x < nodeCountX; x++) {
@@ -230,8 +308,19 @@ class SquareGrid {
     }
 }
 
-// Square class containing positions of 8 points surrounding it
+/**
+ * @class Square class containing positions of 8 points surrounding it.
+ */
 class Square {
+    /**
+     * Creates a square with 8 points surrounding it from 4 vertices. Also assigns it a configuration needed for the marching squares algorithm.
+     * 
+     * @constructor
+     * @param {Node} _topLeft Top left vertex
+     * @param {Node} _topRight Top right vertex
+     * @param {Node} _bottomRight Bottom right vertex
+     * @param {Node} _bottomLeft Bottom left vertex
+     */
     constructor(_topLeft, _topRight, _bottomRight, _bottomLeft) {
         this.topLeft = _topLeft;
         this.topRight = _topRight;
@@ -256,7 +345,18 @@ class Square {
 
 }
 
+/**
+ * @class Class representing a single node with its neighbours.
+ */
 class Node {
+    /**
+     * Creates a single node.
+     * 
+     * @constructor
+     * @param {Vec} pos Top left vertex
+     * @param {bool} active Indicates if the vertex is shared between multiple squares.
+     * @param {number} squareSize Size of the square the node is part of
+     */
     constructor(pos, active, squareSize) {
         this.active = active
         this.position = pos
@@ -265,19 +365,38 @@ class Node {
     }
 }
 
+/**
+ * @class Class representing a trangle.
+ */
 class Triangle {
-    constructor(a, b, c){
+    /**
+     * Creates a triangle based on indices of vertices.
+     * 
+     * @constructor
+     * @param {number} a
+     * @param {number} b
+     * @param {number} c
+     */
+    constructor(a, b, c) {
         this.vertexIndexA = a
         this.vertexIndexB = b
         this.vertexIndexC = c
         this.vertices = [a, b, c]
     }
 
+    /**
+     * Checks if the given index is a part of the triangle.
+     * 
+     * @param {number} vertexIndex 
+     */
     containsVert(vertexIndex) {
         return vertexIndex === this.vertexIndexA || vertexIndex === this.vertexIndexB || vertexIndex === this.vertexIndexC
     }
 }
 
+/**
+ * @class Class representing a vector.
+ */
 class Vec {
     constructor(x, y, z) {
         this.x = x
