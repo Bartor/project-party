@@ -151,7 +151,7 @@ func (g *Game) run() {
 			newPlayer := NewPlayer(g, controller.nick, startingXPos, startingYPos)
 			g.players[controller] = newPlayer
 			select {
-			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d", newPlayer.id)):
+			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d/%s", newPlayer.id, newPlayer.nick)):
 				fmt.Println("Sent information regarding new player of id ", newPlayer.id)
 			default:
 				fmt.Println("huh")
