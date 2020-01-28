@@ -1,4 +1,4 @@
-package main
+package projectparty
 
 import (
 	"encoding/json"
@@ -7,8 +7,8 @@ import (
 )
 
 type Map struct {
-	MapData   [][]int     `json:"map"`
-	Walls     [][]float64 `json:"walls"`
+	MapData     [][]int     `json:"map"`
+	Walls       [][]float64 `json:"walls"`
 	SpawnPoints []struct {
 		X float64 `json:"x"`
 		Y float64 `json:"y"`

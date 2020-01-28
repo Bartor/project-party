@@ -1,15 +1,16 @@
-package main
+// Copyright 2020 Project: Party. All rights Reserved
+
+package projectparty
 
 import (
 	"bytes"
 	"log"
 	"net/http"
-	"time"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
-
 
 // A middleman between the websocket connection of controller app and the game.
 type Controller struct {
@@ -18,11 +19,12 @@ type Controller struct {
 	conn *websocket.Conn
 }
 
-// readPump pumps messages from the websocket connection to the game.
-//
-// The application runs readPump in a per-connection goroutine. The application
-// ensures that there is at most one reader on a connection by executing all
-// reads from this goroutine.
+/*
+readPump pumps messages from the websocket connection to the game.
+The application runs readPump in a per-connection goroutine. The application
+ensures that there is at most one reader on a connection by executing all
+reads from this goroutine.
+*/
 func (c *Controller) readPump() {
 	defer func() {
 		c.game.unregisterController <- c

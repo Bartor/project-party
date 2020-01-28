@@ -1,4 +1,4 @@
-package main
+package projectparty
 
 import (
 	"fmt"
@@ -10,13 +10,12 @@ import (
 	"time"
 )
 
-var currentId uint64 = 0
-
 type Game struct {
 	id          uint64
 	controllers map[*Controller]bool
 	screen      *Screen
 	info        *GameInfo
+	roundCount  int
 
 	controllerMessages chan *ControllerMessage
 
@@ -30,8 +29,7 @@ type Game struct {
 	unregisterGameInfo chan bool
 
 	players    map[*Controller]*Player
-	// shots      []*Shot
-	shotBank		ShotBank
+	shotBank   ShotBank
 	shotsFired uint64
 	mapData    Map
 }
@@ -69,6 +67,7 @@ func newGame() (*Game, error) {
 		players:              make(map[*Controller]*Player),
 		shotBank:             NewShotBank(),
 		shotsFired:           0,
+		roundCount:           0,
 	}, nil
 }
 
@@ -111,7 +110,7 @@ func (g *Game) getPlayerPositions() string {
 
 func (g *Game) getShotPositions() string {
 	shotsChan := make(chan []Shot)
-	g.shotBank.getShots<- GetShotsRequest{shotsChan}
+	g.shotBank.getShots <- GetShotsRequest{shotsChan}
 	shots := <-shotsChan
 	result := ""
 	if len(shots) > 0 {
@@ -130,6 +129,9 @@ func (g *Game) getShotPositions() string {
 }
 
 func (g *Game) round() {
+	// Increment the round count var
+	g.roundCount++
+
 	// Grab new map data
 	loadedMap, err := loadMap()
 	if err != nil {
@@ -159,6 +161,18 @@ func (g *Game) round() {
 	}()
 }
 
+func (g *Game) endGame() {
+	highScore := 0
+	currWinner := ""
+	for _, player := range g.players {
+		if player.score > highScore {
+			highScore = player.score
+			currWinner = player.nick
+		}
+	}
+	g.info.input <- []byte(fmt.Sprintf("EndGame::%d/%s", highScore, currWinner))
+}
+
 func (g *Game) run() {
 	go g.shotBank.Run()
 	go processEvents(g)
@@ -167,9 +181,9 @@ func (g *Game) run() {
 		select {
 		case controller := <-g.registerController:
 			g.controllers[controller] = true
-			startingXPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].X
-			startingYPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].Y
-			newPlayer := NewPlayer(g, controller.nick, startingXPos, startingYPos)
+			// startingXPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].X
+			// startingYPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].Y
+			newPlayer := NewPlayer(g, controller.nick, 0, 0)
 			g.players[controller] = newPlayer
 			select {
 			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d/%s", newPlayer.id, newPlayer.nick)):
@@ -182,7 +196,7 @@ func (g *Game) run() {
 				delete(g.controllers, controller)
 			}
 		case screen := <-g.registerScreen:
-			if (len(g.players) >= 2) {
+			if len(g.players) >= 2 {
 				if g.screen == nil {
 					g.screen = screen
 				}
@@ -259,7 +273,7 @@ func processGameEvents(g *Game) {
 		g.shotBank.moveShots <- true
 
 		shotsChan := make(chan []Shot)
-		g.shotBank.getShots<- GetShotsRequest{shotsChan}
+		g.shotBank.getShots <- GetShotsRequest{shotsChan}
 		shots := <-shotsChan
 
 		for _, currShot := range shots {
@@ -292,6 +306,10 @@ func processGameEvents(g *Game) {
 				}
 			}
 		}
+
+		if g.roundCount >= maxRoundCount {
+			return
+		}
 	}
 }
 
@@ -299,9 +317,9 @@ func (g *Game) checkRoundEnd() *Player {
 	var victorAlive *Player = nil
 	for _, currPlayer := range g.players {
 		// currPlayer := g.players[i]
-		if (currPlayer.alive && victorAlive == nil) {
+		if currPlayer.alive && victorAlive == nil {
 			victorAlive = currPlayer
-		} else if (currPlayer.alive && victorAlive != nil) {
+		} else if currPlayer.alive && victorAlive != nil {
 			return nil
 		}
 	}
@@ -312,7 +330,6 @@ func (g *Game) getScoreBoardUpdate() []byte {
 	result := []byte("ScoreboardUpdate::")
 	for _, player := range g.players {
 		result = append(result, []byte(fmt.Sprintf("%d/%d,", player.id, player.score))...)
-
 	}
 	if len(result) > 0 {
 		result = result[:len(result)-1]
@@ -330,8 +347,12 @@ func processEvents(g *Game) {
 				g.screen.input <- []byte(fmt.Sprintf("EndRound::%d", victor.id))
 				victor.score += lastManStandingPrize
 				g.info.input <- g.getScoreBoardUpdate()
-				g.round()
-				return;
+				if g.roundCount < maxRoundCount {
+					g.round()
+				} else {
+					g.endGame()
+				}
+				return
 			}
 			updateString := g.getPlayerPositions()
 			updateString += ":"

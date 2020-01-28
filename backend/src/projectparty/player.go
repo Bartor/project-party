@@ -1,4 +1,4 @@
-package main
+package projectparty
 
 import (
 	"math"
@@ -6,15 +6,15 @@ import (
 )
 
 type Player struct {
-	game       *Game
-	nick 			 string
-	id         int
-	xPos       float64
-	yPos       float64
-	angle      int
-	eventQueue []*PlayerEvent
-	alive      bool
-	currSpeed  float64
+	game         *Game
+	nick         string
+	id           int
+	xPos         float64
+	yPos         float64
+	angle        int
+	eventQueue   []*PlayerEvent
+	alive        bool
+	currSpeed    float64
 	is_reloading bool
 	score        int
 }
