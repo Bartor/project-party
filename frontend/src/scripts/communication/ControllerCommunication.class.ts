@@ -3,7 +3,7 @@ import Timeout = NodeJS.Timeout;
 
 export class ControllerCommunication {
     private websocket: WebSocketSubject<string>;
-    private ticker: Timeout;
+    private readonly ticker: Timeout;
     private recentAction = {
         move: {speed: -1, direction: -1},
         shoot: {direction: -1}
@@ -19,17 +19,14 @@ export class ControllerCommunication {
         }, 1000 / tickrate);
     }
 
-    public connect(): Promise<null> {
+    public connect(): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.websocket.subscribe(() => {
-                console.log('2') // todo FIX
-                resolve(null);
+            this.websocket.subscribe(msg => {
+                resolve(msg);
             }, err => {
                 clearInterval(this.ticker);
                 this.websocket.unsubscribe();
-                reject(null);
-            }, () => {
-                console.log('1');
+                reject(err);
             });
         });
     }

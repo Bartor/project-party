@@ -16,7 +16,7 @@ export class ProjectParty {
         });
         container.appendChild(this.app.view);
 
-        game.playerSize = (PLAYER_SIZE/DOTS_PER_DIMENSION)*biggerDimension;
+        game.playerSize = (PLAYER_SIZE / DOTS_PER_DIMENSION) * biggerDimension;
         game.communicationService.resizeDimensions.height = biggerDimension;
         game.communicationService.resizeDimensions.width = biggerDimension;
 

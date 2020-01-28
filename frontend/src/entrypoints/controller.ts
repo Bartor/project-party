@@ -12,36 +12,37 @@ window.addEventListener('touchstart', event => {
     if (event.touches.length > 1) event.preventDefault();
 });
 
-let notifications : NotificationManager;
+let notifications: NotificationManager;
 
 window.addEventListener('load', () => {
     const notificationContainer = document.getElementById('notifications');
     const button = document.getElementById('join-button') as HTMLButtonElement;
     const gameIdInput = document.getElementById('game-id-input') as HTMLInputElement;
+    const nickInput = document.getElementById('nick-input') as HTMLInputElement;
 
     notifications = new NotificationManager(notificationContainer);
 
     button.addEventListener('click', () => {
         let id = gameIdInput.value;
+        let nickname = nickInput.value;
         if (!isNaN(Number(id)) && id !== '') {
-            notifications.notify(`Joining game ${id}`);
-            // error handling isn't really present, id has to be correct
-            joinGame(Number(id));
+            joinGame(Number(id), nickname);
         } else {
             notifications.notify(`Id is incorrect`);
         }
     });
 });
 
-function joinGame(gameId: number) {
+function joinGame(gameId: number, nick: string) {
     const container = document.querySelector('main');
 
-    const communication = new ControllerCommunication(ENDPOINTS.controllerEndpoint + `?id=${gameId}`, 50);
+    const communication = new ControllerCommunication(ENDPOINTS.controllerEndpoint + `?id=${gameId}&nickname=${nick}`, 50);
     communication.connect().then(() => {
+        notifications.notify(`Joining game ${gameId}`);
         while (container.firstChild) container.removeChild(container.firstChild);
         const controller = new Controller(container, communication);
         controller.drawLoop();
-    }).catch(() => {
-        notifications.notify('Connection error');
+    }).catch(err => {
+        notifications.notify(`Connection error: ${err}`);
     });
 }

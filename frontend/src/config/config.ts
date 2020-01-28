@@ -16,13 +16,26 @@ export const ENDPOINTS = {
     gameInfoEndpoint: createWsUrl('GAME_INFO')
 };
 
+class Color {
+    constructor(private value: number) {
+    }
+
+    public valueOf() {
+        return this.value;
+    }
+
+    public toString() {
+        return this.value.toString(16).padStart(6, '0');
+    }
+}
+
 export const PLAYER_COLORS = [
-    0x007EA7,
-    0xF1D302,
-    0xC1292E,
-    0xFDFFFC,
-    0x78D5D7,
-    0x136F63
+    new Color(0x007EA7),
+    new Color(0xF1D302),
+    new Color(0xC1292E),
+    new Color(0xFDFFFC),
+    new Color(0x78D5D7),
+    new Color(0x136F63)
 ];
 
 export const DOTS_PER_DIMENSION = 800;

@@ -9,14 +9,18 @@ import {GameinfoCommand} from "../shared/enums/GameinfoCommand.enum";
 import {RoundState} from "../shared/interfaces/RoundState.interface";
 import {GraphicsUpdate} from "../shared/interfaces/GraphicsUpdate.interface";
 import {PLAYER_COLORS} from "../../config/config";
+import {PlayerStatus} from "../shared/interfaces/PlayerStatus.interface";
 
 export class Game {
     private round: Round;
     private players: Map<string, Player> = new Map();
-    private scores: Map<string, number> = new Map();
+    private statuses: Map<string, PlayerStatus> = new Map();
 
     private graphicsSubject = new Subject<GraphicsUpdate>();
     public graphicsUpdates = this.graphicsSubject.asObservable();
+
+    private gameStatusUpdateSubject = new Subject<PlayerStatus[]>();
+    public gameStatus = this.gameStatusUpdateSubject.asObservable();
 
     public gameId: string;
     public playerSize: number = 20;
@@ -26,14 +30,11 @@ export class Game {
         private readonly playerLimit: number = 8,
     ) {
         communicationService.gameinfoUpdates.subscribe(update => {
-            console.log('Got a gameinfo update', update);
             switch (update.command) {
                 case GameinfoCommand.NEW_PLAYER:
-                    const player = new Player(
-                        PLAYER_COLORS[Number(update.params) % PLAYER_COLORS.length],
-                        this.playerSize
-                    );
-                    this.addPlayer(update.params as string, player);
+                    this.addPlayer(update.params.id, update.params.nickname);
+                    this.updateGameStatus();
+
                     break;
                 case GameinfoCommand.NEW_GAME:
                     this.gameId = update.params as string;
@@ -66,8 +67,15 @@ export class Game {
                             players: playerGraphics
                         });
                     });
+
+                    this.updateGameStatus();
                     break;
                 case GameinfoCommand.SCOREBOARD_UPDATE:
+                    update.params.forEach((p: { id: string, score: number }) => {
+                        this.statuses.get(p.id).score = p.score;
+                    });
+
+                    this.updateGameStatus();
                     break;
             }
         });
@@ -77,16 +85,32 @@ export class Game {
         this.communicationService.startGameplayUpdates(this.gameId);
     }
 
-    public addPlayer(name: string, player: Player) {
-        if (this.players.has(name)) throw {message: 'This name is already taken', type: Exceptions.PLAYER_NAME_TAKEN};
+    public addPlayer(id: string, nickname: string) {
+        if (this.players.has(id)) throw {message: 'This name is already taken', type: Exceptions.PLAYER_NAME_TAKEN};
         if (this.players.size === this.playerLimit) throw {message: 'Game is full', type: Exceptions.GAME_FULL};
-        this.players.set(name, player);
-        this.scores.set(name, 0);
+        const color = PLAYER_COLORS[Number(id) % PLAYER_COLORS.length];
+        const player = new Player(
+            color.valueOf(),
+            this.playerSize
+        );
+        this.players.set(id, player);
+        this.statuses.set(id, {
+            score: 0,
+            name: nickname,
+            color: color.toString(),
+            state: player.state
+        });
     }
 
     public removePlayer(name: string) {
         if (!this.players.has(name)) throw {message: 'There is no such player', type: Exceptions.NO_SUCH_PLAYER};
         this.players.delete(name);
-        this.scores.delete(name);
+    }
+
+    private updateGameStatus() {
+        this.players.forEach((player, id) => {
+            this.statuses.get(id).state = player.state;
+        });
+        this.gameStatusUpdateSubject.next([...this.statuses.values()]);
     }
 }

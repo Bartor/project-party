@@ -42,7 +42,17 @@ export class GameCommunication implements GameCommunicationInterface {
             url: roundAddress,
             deserializer: packet => packet.data
         });
-        this.gameinfoWebSocket.subscribe(packet => this.parseGameinfo(packet));
+    }
+
+    public connect(): Promise<string> {
+        return new Promise((resolve, reject) => {
+            this.gameinfoWebSocket.subscribe(packet => {
+                resolve('');
+                this.parseGameinfo(packet);
+            }, err => {
+                reject(err);
+            });
+        });
     }
 
     public startGameplayUpdates(id: string) {
@@ -70,7 +80,6 @@ export class GameCommunication implements GameCommunicationInterface {
                 if (parts[1] !== '') {
                     for (let player of parts[1].split(',') || []) {
                         const res = parseRotatedPosition(player, this.resizeDimensions.width, this.resizeDimensions.height);
-                        console.log(res);
                         playerPositions.set(res.id, res);
                     }
                 }
@@ -84,10 +93,13 @@ export class GameCommunication implements GameCommunicationInterface {
                 });
                 break;
             case 'NewPlayer':
-                const playerId = parts[1];
+                const [playerId, nickname] = parts[1].split('/');
                 this.gameinfoSubject.next({
                     command: GameinfoCommand.NEW_PLAYER,
-                    params: playerId
+                    params: {
+                        id: playerId,
+                        nickname: nickname
+                    }
                 });
                 break;
             case 'NewScreen':
@@ -99,8 +111,24 @@ export class GameCommunication implements GameCommunicationInterface {
             case 'EndRound':
                 const winnerId = parts[1];
                 this.gameinfoSubject.next({
-                   command: GameinfoCommand.END_ROUND,
-                   params: winnerId
+                    command: GameinfoCommand.END_ROUND,
+                    params: winnerId
+                });
+                break;
+            case 'ScoreboardUpdate':
+                const update = [];
+                if (parts[1] !== '') {
+                    for (let player of parts[1].split(',') || []) {
+                        const [id, score] = player.split('/');
+                        update.push({
+                            id: id,
+                            score: Number(score)
+                        });
+                    }
+                }
+                this.gameinfoSubject.next({
+                    command: GameinfoCommand.SCOREBOARD_UPDATE,
+                    params: update
                 });
                 break;
         }
