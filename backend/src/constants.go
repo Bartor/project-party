@@ -32,10 +32,13 @@ const (
 	globalMoveSpeed = 80.0 / 800.0 * timeFactor 
 	slowDown = 3.5*globalMoveSpeed
 
-	playerRadius = 0.020
+	playerRadius = 0.015
 	unitSize = 0.00125
 
 	reloadTime = 300 * time.Millisecond
+	roundBreakTime = 3 * time.Second
+
+	lastManStandingPrize = 4
 )
 
 var (
