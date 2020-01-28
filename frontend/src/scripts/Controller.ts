@@ -5,9 +5,9 @@ export class Controller {
     private readonly canvas: HTMLCanvasElement;
     private readonly context: CanvasRenderingContext2D;
 
-    private readonly centerMove: { x: number, y: number };
-    private readonly centerShoot: { x: number, y: number };
-    private readonly radius: number;
+    private centerMove: { x: number, y: number };
+    private centerShoot: { x: number, y: number };
+    private radius: number;
 
     private centerMoveTouch = {x: 0, y: 0};
     private centerShootTouch = {x: 0, y: 0};
@@ -16,24 +16,12 @@ export class Controller {
 
     constructor(container: HTMLElement, private communication: ControllerCommunication) {
         this.canvas = document.createElement('canvas');
-        this.canvas.height = container.clientHeight;
-        this.canvas.width = container.clientWidth;
         container.append(this.canvas);
 
         this.context = this.canvas.getContext('2d');
+        this.evalDimensions(container);
 
-        let heightFlag = this.canvas.height > this.canvas.width / 2;
-        this.radius = heightFlag ? this.canvas.width / 4 : this.canvas.height / 2;
-        this.centerMove = {
-            x: this.radius,
-            y: this.canvas.height / 2
-        };
-        this.centerShoot = {
-            x: this.canvas.width - this.radius,
-            y: this.canvas.height / 2
-        };
-        this.centerShootTouch = {...this.centerShoot};
-        this.centerMoveTouch = {...this.centerMove};
+        window.addEventListener('resize', () => this.evalDimensions(container));
 
         this.canvas.addEventListener('touchmove', event => event.preventDefault());
         this.canvas.addEventListener('pointerdown', event => {
@@ -63,6 +51,24 @@ export class Controller {
             if (idx !== -1) this.pointers[idx] = Object.assign(event, {controlType: this.pointers[idx].controlType});
             this.handleInput();
         });
+    }
+
+    private evalDimensions(container: HTMLElement) {
+        this.canvas.height = container.clientHeight;
+        this.canvas.width = container.clientWidth;
+
+        let heightFlag = this.canvas.height > this.canvas.width / 2;
+        this.radius = heightFlag ? this.canvas.width / 6 : this.canvas.height / 3;
+        this.centerMove = {
+            x: this.radius * 2,
+            y: this.canvas.height / 2
+        };
+        this.centerShoot = {
+            x: this.canvas.width - this.radius * 2,
+            y: this.canvas.height / 2
+        };
+        this.centerShootTouch = {...this.centerShoot};
+        this.centerMoveTouch = {...this.centerMove};
     }
 
     private handleInput() {
