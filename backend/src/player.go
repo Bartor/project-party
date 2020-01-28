@@ -8,6 +8,7 @@ import (
 
 type Player struct {
 	game       *Game
+	nick 			 string
 	id         int
 	xPos       float64
 	yPos       float64
@@ -24,8 +25,8 @@ type PlayerEvent struct {
 	shotAngle int
 }
 
-func NewPlayer(game *Game, xPos float64, yPos float64) *Player {
-	return &Player{game, len(game.players), xPos, yPos, 0, make([]*PlayerEvent, 0), true, 0, false}
+func NewPlayer(game *Game, nick string, xPos float64, yPos float64) *Player {
+	return &Player{game, nick, len(game.players), xPos, yPos, 0, make([]*PlayerEvent, 0), true, 0, false}
 }
 
 func (p *Player) queueEvent(moveSpeed float64, moveAngle int, shotAngle int) {

@@ -13,6 +13,7 @@ import (
 // A middleman between the websocket connection of controller app and the game.
 type Controller struct {
 	game *Game
+	nick string
 	conn *websocket.Conn
 }
 
@@ -42,13 +43,13 @@ func (c *Controller) readPump() {
 	}
 }
 
-func serveControllerWs(game *Game, w http.ResponseWriter, r *http.Request) {
+func serveControllerWs(game *Game, nick string, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	controller := &Controller{game: game, conn: conn}
+	controller := &Controller{game: game, nick: nick, conn: conn}
 	controller.game.registerController <- controller
 
 	// Allow collection of memory referenced by the caller by doing all work in

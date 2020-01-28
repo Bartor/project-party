@@ -73,6 +73,16 @@ func newGame() (*Game, error) {
 	}, nil
 }
 
+func (g *Game) isNickAvailable(nick string) bool {
+	for _, player := range g.players {
+		if player.nick == nick {
+			return false
+		}
+	}
+
+	return true
+}
+
 func findGameById(id uint64, games []*Game) *Game {
 	for _, game := range games {
 		if game.id == id {
@@ -138,7 +148,7 @@ func (g *Game) run() {
 			g.controllers[controller] = true
 			startingXPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].X
 			startingYPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].Y
-			newPlayer := NewPlayer(g, startingXPos, startingYPos)
+			newPlayer := NewPlayer(g, controller.nick, startingXPos, startingYPos)
 			g.players[controller] = newPlayer
 			select {
 			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d", newPlayer.id)):
