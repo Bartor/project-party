@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "fmt"
 	"math"
 	"time"
 )
@@ -17,6 +16,7 @@ type Player struct {
 	alive      bool
 	currSpeed  float64
 	is_reloading bool
+	score        int
 }
 
 type PlayerEvent struct {
@@ -26,7 +26,7 @@ type PlayerEvent struct {
 }
 
 func NewPlayer(game *Game, nick string, xPos float64, yPos float64) *Player {
-	return &Player{game, nick, len(game.players), xPos, yPos, 0, make([]*PlayerEvent, 0), true, 0, false}
+	return &Player{game, nick, len(game.players), xPos, yPos, 0, make([]*PlayerEvent, 0), true, 0, false, 0}
 }
 
 func (p *Player) queueEvent(moveSpeed float64, moveAngle int, shotAngle int) {
@@ -38,15 +38,14 @@ func (p *Player) processLastEvent() {
 	var moveAngle int
 
 	if len(p.eventQueue) == 0 {
-		p.currSpeed = math.Max(p.currSpeed - slowDown, 0)
+		p.currSpeed = math.Max(p.currSpeed-slowDown, 0)
 		moveSpeed = p.currSpeed
 		moveAngle = p.angle
 	} else {
 		currEvent := p.eventQueue[len(p.eventQueue)-1]
 		moveSpeed = currEvent.moveSpeed
 		moveAngle = currEvent.moveAngle
-
-		if (p.alive) {
+		if p.alive {
 			p.shoot(currEvent.shotAngle)
 		}
 	}
@@ -92,7 +91,7 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 
 func (p *Player) shoot(shotAngle int) {
 	if p.is_reloading {
-		return;
+		return
 	}
 	if shotAngle < 0 {
 		return
@@ -103,18 +102,22 @@ func (p *Player) shoot(shotAngle int) {
 	p.game.shotBank.addShot <- currShot
 	p.game.shotsFired++
 
-	p.is_reloading = true;
-	go func(){
-		time.Sleep(reloadTime);
-		p.is_reloading = false;
+	p.is_reloading = true
+	go func() {
+		time.Sleep(reloadTime)
+		p.is_reloading = false
 	}()
 
 }
 
 func (p *Player) kill() {
 	p.alive = false
-	go func() {
-		time.Sleep(3 * time.Second)
-		p.alive = true
-	}()
+}
+
+func (p *Player) respawn() {
+	startingXPos := p.game.mapData.SpawnPoints[(len(p.game.mapData.SpawnPoints)-p.id*len(p.game.players))%len(p.game.mapData.SpawnPoints)].X
+	startingYPos := p.game.mapData.SpawnPoints[(len(p.game.mapData.SpawnPoints)-p.id*len(p.game.players))%len(p.game.mapData.SpawnPoints)].Y
+	p.xPos = startingXPos
+	p.yPos = startingYPos
+	p.alive = true
 }

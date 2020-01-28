@@ -36,6 +36,7 @@ const (
 	unitSize = 0.00125
 
 	reloadTime = 300 * time.Millisecond
+	roundBreakTime = 3 * time.Second
 )
 
 var (
