@@ -90,6 +90,8 @@ func serveControllerWs(w http.ResponseWriter, r *http.Request, games []*Game) {
 		return
 	}
 
+	conn.WriteMessage(websocket.TextMessage, []byte("successful"))
+
 	controller := &Controller{game: game, nick: nick, conn: conn}
 	controller.game.registerController <- controller
 
