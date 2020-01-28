@@ -36,24 +36,7 @@ func main() {
 	})
 
 	http.HandleFunc("/controllerWs", func(w http.ResponseWriter, r *http.Request) {
-		keys, ok := r.URL.Query()["id"]
-
-		if !ok || len(keys) < 1 {
-			return
-		}
-
-		gameId, err := strconv.ParseUint(keys[0], 10, 64)
-
-		if err != nil {
-			return
-		}
-
-		game := findGameById(gameId, games)
-
-		if game == nil {
-			return
-		}
-		serveControllerWs(game, w, r)
+		serveControllerWs(w, r, games)
 	})
 
 	http.HandleFunc("/gameInfoWs", func(w http.ResponseWriter, r *http.Request) {

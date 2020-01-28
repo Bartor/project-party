@@ -67,10 +67,19 @@ func newGame() (*Game, error) {
 		registerGameInfo:     make(chan *GameInfo),
 		unregisterGameInfo:   make(chan bool),
 		players:              make(map[*Controller]*Player),
-		// shots:                make([]*Shot, 0),
-		shotBank:							NewShotBank(),
+		shotBank:             NewShotBank(),
 		shotsFired:           0,
 	}, nil
+}
+
+func (g *Game) isNickAvailable(nick string) bool {
+	for _, player := range g.players {
+		if player.nick == nick {
+			return false
+		}
+	}
+
+	return true
 }
 
 func findGameById(id uint64, games []*Game) *Game {
@@ -119,16 +128,38 @@ func (g *Game) getShotPositions() string {
 
 	return result
 }
-func (g *Game) run() {
-	loadedMap, err := loadMap()
 
+func (g *Game) round() {
+	// Grab new map data
+	loadedMap, err := loadMap()
 	if err != nil {
 		fmt.Printf("The HTTP request to grab map data failed with error %s\n", err)
 		return
 	}
-
 	g.mapData = loadedMap
 
+	// Reset shot count
+	g.shotBank = NewShotBank()
+	go g.shotBank.Run()
+
+	// Send new round info
+	go func() {
+		time.Sleep(roundBreakTime)
+
+		// Update player positions and respawn
+		for i := range g.players {
+			currPlayer := g.players[i]
+			currPlayer.respawn()
+		}
+
+		messageToSend := []byte(fmt.Sprintf("NewRound::%s::", g.getPlayerPositions()))
+		messageToSend = append(messageToSend, createJsonFromMap(g.mapData)...)
+		g.info.input <- messageToSend
+		go processEvents(g)
+	}()
+}
+
+func (g *Game) run() {
 	go g.shotBank.Run()
 	go processEvents(g)
 	go processGameEvents(g)
@@ -138,10 +169,10 @@ func (g *Game) run() {
 			g.controllers[controller] = true
 			startingXPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].X
 			startingYPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].Y
-			newPlayer := NewPlayer(g, startingXPos, startingYPos)
+			newPlayer := NewPlayer(g, controller.nick, startingXPos, startingYPos)
 			g.players[controller] = newPlayer
 			select {
-			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d", newPlayer.id)):
+			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d/%s", newPlayer.id, newPlayer.nick)):
 				fmt.Println("Sent information regarding new player of id ", newPlayer.id)
 			default:
 				fmt.Println("huh")
@@ -151,12 +182,12 @@ func (g *Game) run() {
 				delete(g.controllers, controller)
 			}
 		case screen := <-g.registerScreen:
-			if g.screen == nil {
-				g.screen = screen
+			if (len(g.players) >= 2) {
+				if g.screen == nil {
+					g.screen = screen
+				}
+				g.round()
 			}
-			messageToSend := []byte(fmt.Sprintf("NewRound::%s::", g.getPlayerPositions()))
-			messageToSend = append(messageToSend, createJsonFromMap(g.mapData)...)
-			g.info.input <- messageToSend
 		case <-g.unregisterScreen:
 			g.screen = nil
 		case info := <-g.registerGameInfo:
@@ -252,8 +283,10 @@ func processGameEvents(g *Game) {
 		for _, currShot := range shots {
 			for i := range g.players {
 				currPlayer := g.players[i]
-				if math.Abs(currShot.xPos-currPlayer.xPos) < 0.025 && math.Abs(currShot.yPos-currPlayer.yPos) < 0.025 && currShot.owner.id != currPlayer.id && currPlayer.alive {
+				if math.Abs(currShot.xPos-currPlayer.xPos) < playerRadius && math.Abs(currShot.yPos-currPlayer.yPos) < playerRadius && currShot.owner.id != currPlayer.id && currPlayer.alive {
 					currPlayer.kill()
+					currShot.owner.score++
+					g.info.input <- g.getScoreBoardUpdate()
 					g.shotBank.deleteShot <- currShot.id
 					fmt.Println("Played with id ", currPlayer.id, " killed")
 				}
@@ -262,13 +295,47 @@ func processGameEvents(g *Game) {
 	}
 }
 
+func (g *Game) checkRoundEnd() *Player {
+	var victorAlive *Player = nil
+	for _, currPlayer := range g.players {
+		// currPlayer := g.players[i]
+		if (currPlayer.alive && victorAlive == nil) {
+			victorAlive = currPlayer
+		} else if (currPlayer.alive && victorAlive != nil) {
+			return nil
+		}
+	}
+	return victorAlive
+}
+
+func (g *Game) getScoreBoardUpdate() []byte {
+	result := []byte("ScoreboardUpdate::")
+	for _, player := range g.players {
+		result = append(result, []byte(fmt.Sprintf("%d/%d,", player.id, player.score))...)
+
+	}
+	if len(result) > 0 {
+		result = result[:len(result)-1]
+	}
+
+	return result
+}
+
 func processEvents(g *Game) {
 	for range time.Tick(time.Nanosecond * fastRefresh) {
 		if g.screen != nil {
+			victor := g.checkRoundEnd()
+			if victor != nil {
+				fmt.Println("Sending info about end of round with victor with id ", victor.id)
+				g.screen.input <- []byte(fmt.Sprintf("EndRound::%d", victor.id))
+				victor.score += lastManStandingPrize
+				g.info.input <- g.getScoreBoardUpdate()
+				g.round()
+				return;
+			}
 			updateString := g.getPlayerPositions()
 			updateString += ":"
 			updateString += g.getShotPositions()
-			// fmt.Println(updateString)
 			g.screen.input <- []byte(updateString)
 		}
 	}

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"strconv"
 
 	"github.com/gorilla/websocket"
 )
@@ -13,6 +14,7 @@ import (
 // A middleman between the websocket connection of controller app and the game.
 type Controller struct {
 	game *Game
+	nick string
 	conn *websocket.Conn
 }
 
@@ -42,13 +44,55 @@ func (c *Controller) readPump() {
 	}
 }
 
-func serveControllerWs(game *Game, w http.ResponseWriter, r *http.Request) {
+func serveControllerWs(w http.ResponseWriter, r *http.Request, games []*Game) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	controller := &Controller{game: game, conn: conn}
+
+	keys, ok := r.URL.Query()["id"]
+
+	if !ok || len(keys) < 1 {
+		conn.WriteMessage(websocket.TextMessage, []byte("Error: id is required"))
+		conn.WriteMessage(websocket.CloseMessage, []byte{})
+		return
+	}
+
+	gameId, err := strconv.ParseUint(keys[0], 10, 64)
+
+	if err != nil {
+		conn.WriteMessage(websocket.TextMessage, []byte("Error: id must be an integer"))
+		conn.WriteMessage(websocket.CloseMessage, []byte{})
+		return
+	}
+
+	keys, ok = r.URL.Query()["nick"]
+	if !ok || len(keys) < 1 {
+		conn.WriteMessage(websocket.TextMessage, []byte("Error: nick is required"))
+		conn.WriteMessage(websocket.CloseMessage, []byte{})
+		return
+	}
+
+	nick := keys[0]
+
+	game := findGameById(gameId, games)
+
+	if game == nil {
+		conn.WriteMessage(websocket.TextMessage, []byte("Error: game with given id doesn't exist"))
+		conn.WriteMessage(websocket.CloseMessage, []byte{})
+		return
+	}
+
+	if !game.isNickAvailable(nick) {
+		conn.WriteMessage(websocket.TextMessage, []byte("Error: nick is not available"))
+		conn.WriteMessage(websocket.CloseMessage, []byte{})
+		return
+	}
+
+	conn.WriteMessage(websocket.TextMessage, []byte("successful"))
+
+	controller := &Controller{game: game, nick: nick, conn: conn}
 	controller.game.registerController <- controller
 
 	// Allow collection of memory referenced by the caller by doing all work in
