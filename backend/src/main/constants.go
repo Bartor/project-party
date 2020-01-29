@@ -1,7 +1,7 @@
 // Copyright 2020 Project: Party. All rights Reserved
 
 // The main package of the game
-package projectparty
+package main
 
 import (
 	"github.com/gorilla/websocket"

@@ -1,6 +1,7 @@
 // Copyright 2020 Project: Party. All rights Reserved
 
-package projectparty
+// The main package of the game
+package main
 
 import (
 	"bytes"
@@ -19,12 +20,11 @@ type Controller struct {
 	conn *websocket.Conn
 }
 
-/*
-readPump pumps messages from the websocket connection to the game.
-The application runs readPump in a per-connection goroutine. The application
-ensures that there is at most one reader on a connection by executing all
-reads from this goroutine.
-*/
+
+// readPump pumps messages from the websocket connection to the game.
+// The application runs readPump in a per-connection goroutine. The application
+// ensures that there is at most one reader on a connection by executing all
+// reads from this goroutine.
 func (c *Controller) readPump() {
 	defer func() {
 		c.game.unregisterController <- c
@@ -46,6 +46,7 @@ func (c *Controller) readPump() {
 	}
 }
 
+// Returns a new controller websocket based on the request received
 func serveControllerWs(w http.ResponseWriter, r *http.Request, games []*Game) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {

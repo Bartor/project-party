@@ -1,10 +1,14 @@
-package projectparty
+// Copyright 2020 Project: Party. All rights Reserved
+
+// The main package of the game
+package main
 
 import (
 	"math"
 	"time"
 )
 
+// Player holds all information about the current player, including nickname, position, life and reload status
 type Player struct {
 	game         *Game
 	nick         string
@@ -19,20 +23,24 @@ type Player struct {
 	score        int
 }
 
+// PlayerEvent holds data that has been received from the controller websocket of the player
 type PlayerEvent struct {
 	moveSpeed float64
 	moveAngle int
 	shotAngle int
 }
 
+// NewPlayer(game *Game, nick string, xPos float64, yPos float64) returns a reference to a Player structure based on received data
 func NewPlayer(game *Game, nick string, xPos float64, yPos float64) *Player {
 	return &Player{game, nick, len(game.players), xPos, yPos, 0, make([]*PlayerEvent, 0), true, 0, false, 0}
 }
 
+// queueEvent(moveSpeed float64, moveAngle int, shotAngle int) appends a new PlayerEvent to be processed
 func (p *Player) queueEvent(moveSpeed float64, moveAngle int, shotAngle int) {
 	p.eventQueue = append(p.eventQueue, &PlayerEvent{moveSpeed, moveAngle, shotAngle})
 }
 
+// processLastEvent() handles synchronization between game data and information received from controller websocket
 func (p *Player) processLastEvent() {
 	var moveSpeed float64
 	var moveAngle int
@@ -56,6 +64,7 @@ func (p *Player) processLastEvent() {
 	p.eventQueue = nil
 }
 
+// move(moveSpeed float64, moveAngle int) calculates Player's new position, based on movement speed and angle
 func (p *Player) move(moveSpeed float64, moveAngle int) {
 	if moveSpeed <= 0 {
 		return
@@ -75,11 +84,6 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 			xPosB := wall[(i+2)%len(wall)]
 			yPosB := wall[(i+3)%len(wall)]
 			if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, newXPos, newYPos, playerRadius) {
-				// fmt.Println("Found collision with wall of index ", i)
-				// fmt.Println("Wall coordinates", wall)
-				// fmt.Println("Point X coordinates", wall[i], wall[i+1])
-				// fmt.Println("Point Y coordinates", wall[i+2], wall[i+3])
-				// fmt.Println("Player coordinates after moving and radius", newXPos, newYPos, playerRadius)
 				return
 			}
 		}
@@ -89,6 +93,7 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 	p.yPos = newYPos
 }
 
+// shoot(shotAngle int) adds a new Shot structure to the game, based on the received angle and current Player position
 func (p *Player) shoot(shotAngle int) {
 	if p.is_reloading {
 		return
@@ -110,10 +115,12 @@ func (p *Player) shoot(shotAngle int) {
 
 }
 
+ // kill() updates the Player's life status
 func (p *Player) kill() {
 	p.alive = false
 }
 
+// respawn() updates the Player's life status and updates its respawn position
 func (p *Player) respawn() {
 	startingXPos := p.game.mapData.SpawnPoints[(len(p.game.mapData.SpawnPoints)-p.id*len(p.game.players))%len(p.game.mapData.SpawnPoints)].X
 	startingYPos := p.game.mapData.SpawnPoints[(len(p.game.mapData.SpawnPoints)-p.id*len(p.game.players))%len(p.game.mapData.SpawnPoints)].Y

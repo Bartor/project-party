@@ -1,6 +1,10 @@
-package projectparty
+// Copyright 2020 Project: Party. All rights Reserved
+
+// The main package of the game
+package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"

@@ -1,4 +1,7 @@
-package projectparty
+// Copyright 2020 Project: Party. All rights Reserved
+
+// The main package of the game
+package main
 
 import (
 	"log"
@@ -63,6 +66,7 @@ func (s *Screen) writePump() {
 	}
 }
 
+// Returns a new screen websocket based on the request received
 func serveScreenWs(game *Game, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {

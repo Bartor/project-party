@@ -1,4 +1,7 @@
-package projectparty
+// Copyright 2020 Project: Party. All rights Reserved
+
+// The main package of the game
+package main
 
 import (
 	"encoding/json"
@@ -16,23 +19,24 @@ type Map struct {
 	ErrorInfo interface{} `json:"error"`
 }
 
+// createMapFromJson(jsonData []byte) creates a Map structure based on JSON data from the generator
 func createMapFromJson(jsonData []byte) Map {
 	var newMap Map
 	json.Unmarshal(jsonData, &newMap)
 	return newMap
 }
 
+// createJsonFromMap(mapData Map) creates a JSON object for the screen websocket based on Map structure
 func createJsonFromMap(mapData Map) []byte {
 	jsonData, _ := json.Marshal(&mapData)
 	return jsonData
 }
 
-/*
-	Checks if two circles collide in any point of time given the position (xPosA, yPosA),
-	the velocity (xVelocityA, yVelocityA) and the radius (radiusA) of the circle A and
-	the position (xPosB, yPosB), the velocity (xVelocityB, yVelocityB) and the radius (radiusB)
-	of the circle B.
-*/
+// circleCircleCollision(xPosA, yPosA, radiusA, xVelocityA, yVelocityA, xPosB, yPosB, radiusB, xVelocityB, yVelocityB float64)
+// checks if two circles collide in any point of time given the position (xPosA, yPosA),
+// the velocity (xVelocityA, yVelocityA) and the radius (radiusA) of the circle A and
+// the position (xPosB, yPosB), the velocity (xVelocityB, yVelocityB) and the radius (radiusB)
+// of the circle B.
 func (m *Map) circleCircleCollision(xPosA, yPosA, radiusA, xVelocityA, yVelocityA, xPosB, yPosB, radiusB, xVelocityB, yVelocityB float64) bool {
 	var xVelocityAB = xVelocityA - xVelocityB
 	var yVelocityAB = yVelocityA - yVelocityB
@@ -53,7 +57,7 @@ func (m *Map) circleCircleCollision(xPosA, yPosA, radiusA, xVelocityA, yVelocity
 	return false
 }
 
-// does [(x1, y1), (x2, y2)] intersect [(x3, y3), (x4, y4)]?
+// lineLineCollision(x1, y1, x2, y2, x3, y3, x4, y4 float64) checks whether [(x1, y1), (x2, y2)] intersects [(x3, y3), (x4, y4)]
 func (m *Map) lineLineCollision(x1, y1, x2, y2, x3, y3, x4, y4 float64) bool {
 
 	c := (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
@@ -73,7 +77,7 @@ func (m *Map) lineLineCollision(x1, y1, x2, y2, x3, y3, x4, y4 float64) bool {
 
 }
 
-// does [(x1, y1), (x2, y2)] intersect circle with centre in (cx, cy) and radius r
+// lineCircleCollision(x1, y1, x2, y2, cx, cy, r float64) checks whether [(x1, y1), (x2, y2)] intersects circle with centre in (cx, cy) and radius r
 func (m *Map) lineCircleCollision(x1, y1, x2, y2, cx, cy, r float64) bool {
 
 	a := (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1)
