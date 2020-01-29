@@ -82,11 +82,11 @@ func (m *Map) lineCircleCollision(x1, y1, x2, y2, cx, cy, r float64) bool {
 
 	delta := b*b - 4*a*c
 
-	if delta >= 0 {
+	if delta > 0 {
 		t1 := (-b - math.Sqrt(delta)) / (2 * a)
 		t2 := (-b + math.Sqrt(delta)) / (2 * a)
 
-		if (t1 >= 0.0 && t1 <= 1.0) || (t2 >= 0.0 && t2 <= 1.0) {
+		if (t1 > 0.0 && t1 < 1.0) || (t2 > 0.0 && t2 < 1.0) {
 			// fmt.Println("a b c delta t1 t2", a, b, c, delta, t1, t2)
 			return true
 		}

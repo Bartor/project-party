@@ -87,20 +87,26 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 				}
 				
 				wallAngle = math.Abs(wallAngle);
-				newerXPos, newerYPos := p.game.mapData.smoothCollison(wallAngle, newXPos, newYPos, p.xPos, p.yPos, slope)
+				transformedX, transformedY := p.game.mapData.smoothCollison(wallAngle, newXPos, newYPos, p.xPos, p.yPos, slope)
 				
 				nextWallX := wall[(i+4)%len(wall)]
 				nextWallY := wall[(i+5)%len(wall)]
+				prevWallX := wall[betterModulo(i-2, len(wall))]
+				prevWallY := wall[betterModulo(i-1, len(wall))]
+
 				
-				if p.game.mapData.lineCircleCollision(xPosB, yPosB, nextWallX, nextWallY, newerXPos, newerYPos, playerRadius) {
+				if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, transformedX, transformedY, playerRadius) && 
+					!p.game.mapData.lineCircleCollision(prevWallX, prevWallY, xPosA, yPosA, transformedX, transformedY, playerRadius) {
+					continue
+				}
+				if p.game.mapData.lineCircleCollision(prevWallX, prevWallY, xPosA, yPosA, transformedX, transformedY, playerRadius) {
 					return
 				}
-				p.xPos, p.yPos = newerXPos, newerYPos
-				// fmt.Println("Found collision with wall of index ", i)
-				// fmt.Println("Wall coordinates", wall)
-				// fmt.Println("Point X coordinates", wall[i], wall[i+1])
-				// fmt.Println("Point Y coordinates", wall[i+2], wall[i+3])
-				// fmt.Println("Player coordinates after moving and radius", newXPos, newYPos, playerRadius)
+				if p.game.mapData.lineCircleCollision(xPosB, yPosB, nextWallX, nextWallY, transformedX, transformedY, playerRadius) {
+					return
+				}
+				
+				p.xPos, p.yPos = transformedX, transformedY
 				return
 			}
 		}
@@ -110,6 +116,14 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 	p.yPos = newYPos
 }
 
+
+func betterModulo(a , b int) int {
+	if a<0 {
+		return b+a%b
+	} else {
+		return a%b
+	}
+}
 
 func (p *Player) shoot(shotAngle int) {
 	if p.is_reloading {
