@@ -138,6 +138,13 @@ func (g *Game) round() {
 	}
 	g.mapData = loadedMap
 
+	spawnPoint := 0
+	for i := range g.players {
+		spawnPoint += len(g.players)
+		g.players[i].xPos = g.mapData.SpawnPoints[spawnPoint].X
+		g.players[i].yPos = g.mapData.SpawnPoints[spawnPoint].Y
+	}
+
 	// Reset shot count
 	g.shotBank = NewShotBank()
 	go g.shotBank.Run()
@@ -167,9 +174,7 @@ func (g *Game) run() {
 		select {
 		case controller := <-g.registerController:
 			g.controllers[controller] = true
-			startingXPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].X
-			startingYPos := g.mapData.SpawnPoints[len(g.players)%len(g.mapData.SpawnPoints)].Y
-			newPlayer := NewPlayer(g, controller.nick, startingXPos, startingYPos)
+			newPlayer := NewPlayer(g, controller.nick, 0, 0)
 			g.players[controller] = newPlayer
 			select {
 			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d/%s", newPlayer.id, newPlayer.nick)):
