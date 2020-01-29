@@ -1,6 +1,9 @@
 import {PlayerState} from "../../shared/enums/PlayerState.enum";
 import {MovableGraphics} from "../../shared/abstract/MovableGraphics.asbstract.class";
 
+/**
+ * A single player on the map.
+ */
 export class Player extends MovableGraphics {
     private _state = PlayerState.ALIVE;
     public get state() { return this._state; }
@@ -17,6 +20,11 @@ export class Player extends MovableGraphics {
         this._state = state;
     }
 
+    /**
+     * Create a new player.
+     * @param color A color number, e.g. 0x0F0D23
+     * @param size A size of the player.
+     */
     constructor(color: number, size: number) {
         super();
         this.angleFixup = Math.PI * 3 / 4;

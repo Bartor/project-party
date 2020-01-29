@@ -1,6 +1,9 @@
 import {ControllerCommunication} from "./communication/ControllerCommunication.class";
 import {Point} from "./shared/interfaces/Point.interface";
 
+/**
+ * A class which displays the controls on the mobile.
+ */
 export class Controller {
     private readonly canvas: HTMLCanvasElement;
     private readonly context: CanvasRenderingContext2D;
@@ -14,6 +17,11 @@ export class Controller {
 
     private pointers: (PointerEvent & {controlType: string})[] = [];
 
+    /**
+     * Create a new instance.
+     * @param container Where the canvas should be drawn.
+     * @param communication A communication service to use.
+     */
     constructor(container: HTMLElement, private communication: ControllerCommunication) {
         this.canvas = document.createElement('canvas');
         container.append(this.canvas);
@@ -53,6 +61,10 @@ export class Controller {
         });
     }
 
+    /**
+     * Used when resizing the window.
+     * @param container A new container of the canvas.
+     */
     private evalDimensions(container: HTMLElement) {
         this.canvas.height = container.clientHeight;
         this.canvas.width = container.clientWidth;
@@ -71,6 +83,10 @@ export class Controller {
         this.centerMoveTouch = {...this.centerMove};
     }
 
+    /**
+     * Used as a callback for move events. Calculates the corresponding
+     * input and updates it in state.
+     */
     private handleInput() {
         let shoot = false, move = false;
         for (let pointerEvent of this.pointers) {
@@ -109,6 +125,9 @@ export class Controller {
         if (!move) this.centerMoveTouch = {...this.centerMove};
     }
 
+    /**
+     * Send current controller state to the communication service.
+     */
     private communicate() {
         let moveDist = this.dist(this.centerMove, this.centerMoveTouch);
         if (moveDist > 0) {
@@ -123,6 +142,9 @@ export class Controller {
         }
     }
 
+    /**
+     * Start drawing the controls on the canvas.
+     */
     drawLoop() {
         this.communicate();
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -148,10 +170,16 @@ export class Controller {
         requestAnimationFrame(() => this.drawLoop());
     }
 
+    /**
+     * Distance between two points.
+     */
     private dist(a: Point, b: Point) {
         return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
     }
 
+    /**
+     * Angle between two points.
+     */
     private angle(pivot: Point, point: Point) {
         let sin = Math.abs(point.y - pivot.y)/this.dist(pivot, point);
         let calculatedAngle: number;

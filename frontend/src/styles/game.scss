@@ -22,7 +22,12 @@ html, body {
       width: 100vh;
     }
 
-    nav {
+    section {
+
+      nav {
+        display: flex;
+        flex-flow: column;
+      }
       header {
         justify-self: flex-start;
       }
@@ -34,7 +39,6 @@ html, body {
       height: 100%;
       display: flex;
       flex-flow: column;
-      justify-content: center;
       align-items: center;
     }
   }

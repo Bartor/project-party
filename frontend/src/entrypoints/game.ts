@@ -9,8 +9,12 @@ import {ENDPOINTS} from "../config/config";
 import {NotificationManager} from "../helper/notifications/NotificationManager";
 import {PlayerStatus} from "../scripts/shared/interfaces/PlayerStatus.interface";
 
+let createGameButton: HTMLButtonElement;
+let startGameButton: HTMLButtonElement;
+
 window.addEventListener('load', () => {
-    const createGameButton = document.getElementById('create');
+    createGameButton = document.getElementById('create') as HTMLButtonElement;
+    startGameButton = document.getElementById('start') as HTMLButtonElement;
 
     createGameButton.addEventListener('click', () => {
         startGame();
@@ -20,15 +24,17 @@ window.addEventListener('load', () => {
 function startGame() {
     const notificationContainer = document.getElementById('notifications');
     const container = document.getElementById('container');
-    const startGameButton = document.getElementById('start');
 
     const notifications = new NotificationManager(notificationContainer);
 
     const communication = new GameCommunication(ENDPOINTS.gameInfoEndpoint, ENDPOINTS.screenEndpoint);
     const game = new Game(communication);
 
-    communication.connect().then(() => {
+    communication.connect().then(gameId => {
         const projectParty = new ProjectParty(container, game);
+        createGameButton.disabled = true;
+        createGameButton.textContent = `Game: ${gameId}`;
+        notifications.notify(`Created a game ${gameId}`);
 
         game.gameStatus.subscribe(updateScoreboard);
 
@@ -51,7 +57,7 @@ function updateScoreboard(statuses: PlayerStatus[]) {
         const nameTd = document.createElement('td');
         const scoreTd = document.createElement('td');
 
-        colorTd.textContent = '⬤';
+        colorTd.textContent = String.fromCharCode(0x2b24); // ⬤
         colorTd.style.color = `#${status.color}`;
         nameTd.textContent = status.name;
         scoreTd.textContent = status.score.toString();

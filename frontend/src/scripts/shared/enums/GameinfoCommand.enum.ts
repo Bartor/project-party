@@ -1,3 +1,6 @@
+/**
+ * Commands used in GameinfoUpdate.
+ */
 export enum GameinfoCommand {
     NEW_PLAYER,
     NEW_ROUND,

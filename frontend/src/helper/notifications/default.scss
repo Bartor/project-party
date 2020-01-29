@@ -3,16 +3,14 @@
 footer#notifications {
   user-select: none;
   width: 100%;
-  position: fixed;
-  bottom: 0;
-  left: 0;
 
+  flex-grow: 1;
   display: flex;
-  flex-flow: column;
   align-items: center;
+  justify-items: flex-end;
+  flex-flow: column-reverse;
 
   p {
-    width: 50%;
     @include interaction-style;
   }
 }

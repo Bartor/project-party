@@ -1,24 +1,31 @@
 import {GameMap} from "../game_objects/map/GameMap";
 import {Player} from "../game_objects/player/Player";
 import {Projectile} from "../game_objects/player/Projectile";
-import {Observable, Subject} from "rxjs";
+import {Observable, Subject, Subscription} from "rxjs";
 import {GameplayUpdate} from "../shared/interfaces/GameplayUpdate.interface";
 import {PlayerState} from "../shared/enums/PlayerState.enum";
 import DisplayObject = PIXI.DisplayObject;
 
+/**
+ * A single round in the game.
+ */
 export class Round {
-    private map: GameMap;
-    private players: Map<string, Player> = new Map();
+    private subscription: Subscription;
+    private players: Map<string, Player>;
     private projectiles: Map<string, Projectile> = new Map();
 
     private projectileSubject = new Subject<DisplayObject[]>();
     public projectileUpdates = this.projectileSubject.asObservable();
 
-    constructor(players: Map<string, Player>, map: GameMap, gameUpdates: Observable<GameplayUpdate>) {
+    /**
+     * Create a new Round instance with a given set of players.
+     * @param players Players to be included in this round.
+     * @param gameUpdates A place the gameplay updates should be taken from.
+     */
+    constructor(players: Map<string, Player>, gameUpdates: Observable<GameplayUpdate>) {
         this.players = players;
-        this.map = map;
 
-        gameUpdates.subscribe(update => {
+        this.subscription = gameUpdates.subscribe(update => {
             this.players.forEach(player => player.state = PlayerState.SCHRODINGER);
             this.projectiles.forEach(projectile => projectile.marked = false);
 
@@ -46,5 +53,13 @@ export class Round {
             });
             this.projectileSubject.next([...this.projectiles.values()].map(p => p.getGraphics()));
         });
+    }
+
+    /**
+     * End this round; unsubscribes from observables and completes its own.
+     */
+    public end() {
+        this.projectileSubject.complete();
+        this.subscription.unsubscribe();
     }
 }

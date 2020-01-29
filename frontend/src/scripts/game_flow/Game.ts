@@ -11,6 +11,10 @@ import {GraphicsUpdate} from "../shared/interfaces/GraphicsUpdate.interface";
 import {PLAYER_COLORS} from "../../config/config";
 import {PlayerStatus} from "../shared/interfaces/PlayerStatus.interface";
 
+/**
+ * A single Game instance; holds all the players, scores and
+ * changes rounds.
+ */
 export class Game {
     private round: Round;
     private players: Map<string, Player> = new Map();
@@ -46,6 +50,8 @@ export class Game {
                         this.players.get(name).toRotatedPosition(position);
                     });
 
+                    if (this.round) this.round.end();
+
                     const map = new GameMap(update.params.map);
 
                     const mapGraphics = map.getGraphics();
@@ -58,7 +64,8 @@ export class Game {
                         projectiles: [],
                         players: playerGraphics
                     });
-                    this.round = new Round(this.players, map, communicationService.gameplayUpdates);
+
+                    this.round = new Round(this.players, communicationService.gameplayUpdates);
                     this.round.projectileUpdates.subscribe(update => {
                         this.graphicsSubject.next({
                             newPlayers: false,
@@ -82,10 +89,18 @@ export class Game {
         });
     }
 
+    /**
+     * Start fetching gameplay updates and start the game.
+     */
     public startGame() {
         this.communicationService.startGameplayUpdates(this.gameId);
     }
 
+    /**
+     * Create and add a new Player instance to this game.
+     * @param id Player's id.
+     * @param nickname Player's nickname.
+     */
     public addPlayer(id: string, nickname: string) {
         if (this.players.has(id)) throw {message: 'This name is already taken', type: Exceptions.PLAYER_NAME_TAKEN};
         if (this.players.size === this.playerLimit) throw {message: 'Game is full', type: Exceptions.GAME_FULL};
@@ -103,11 +118,18 @@ export class Game {
         });
     }
 
-    public removePlayer(name: string) {
-        if (!this.players.has(name)) throw {message: 'There is no such player', type: Exceptions.NO_SUCH_PLAYER};
-        this.players.delete(name);
+    /**
+     * Remove a given player from this game.
+     * @param id Id of the player to be removed.
+     */
+    public removePlayer(id: string) {
+        if (!this.players.has(id)) throw {message: 'There is no such player', type: Exceptions.NO_SUCH_PLAYER};
+        this.players.delete(id);
     }
 
+    /**
+     * Fetch current players' statuses and update the observable.
+     */
     private updateGameStatus() {
         this.players.forEach((player, id) => {
             this.statuses.get(id).state = player.state;

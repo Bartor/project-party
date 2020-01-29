@@ -5,8 +5,14 @@ import {WebSocketSubject} from "rxjs/webSocket";
 import {RotatedPosition} from "../shared/interfaces/RotatedPosition.interface";
 import {GameinfoUpdate} from "../shared/interfaces/GamenfoUpdate.interface";
 import {GameinfoCommand} from "../shared/enums/GameinfoCommand.enum";
-import {RoundState} from "../shared/interfaces/RoundState.interface";
 
+/**
+ * Parse and scale a rotated position from a packet.
+ * @param packetString An original string with the data.
+ * @param width A width the position should be scaled to.
+ * @param height A height the position should be scale to.
+ * @return A rotated position instance.
+ */
 function parseRotatedPosition(packetString: string, width: number, height: number): RotatedPosition & { id: string } {
     const parts = packetString.split('/');
     return {
@@ -19,6 +25,9 @@ function parseRotatedPosition(packetString: string, width: number, height: numbe
     };
 }
 
+/**
+ * Communication class used in game frontend.
+ */
 export class GameCommunication implements GameCommunicationInterface {
     private gameplayWebsocket: WebSocketSubject<string>;
     private gameinfoWebSocket: WebSocketSubject<string>;
@@ -34,47 +43,72 @@ export class GameCommunication implements GameCommunicationInterface {
         height: 1
     };
 
+    /**
+     * Create a new instance with separate addresses for round updates
+     * and gameplay updates.
+     * @param gameinfoAddress
+     * @param gameplayAddress
+     */
     constructor(
-        roundAddress: string,
+        gameinfoAddress: string,
         private gameplayAddress: string,
     ) {
         this.gameinfoWebSocket = new WebSocketSubject({
-            url: roundAddress,
+            url: gameinfoAddress,
             deserializer: packet => packet.data
         });
     }
 
+    /**
+     * Establish and test a connection.
+     * @return A Promise which rejects on an error or fulfils otherwise.
+     */
     public connect(): Promise<string> {
         return new Promise((resolve, reject) => {
             this.gameinfoWebSocket.subscribe(packet => {
-                resolve('');
-                this.parseGameinfo(packet);
+                const result = this.parseGameinfo(packet);
+                this.gameinfoSubject.next(result);
+
+                if (result.command === GameinfoCommand.NEW_GAME) resolve(result.params);
             }, err => {
                 reject(err);
             });
         });
     }
 
+    /**
+     * Start the game and start fetching gameplay updates.
+     * @param id Id of the game to start fetching.
+     */
     public startGameplayUpdates(id: string) {
         this.gameplayWebsocket = new WebSocketSubject({
             url: this.gameplayAddress + `?id=${id}`,
             deserializer: packet => packet.data
         });
-        this.gameplayWebsocket.subscribe(packet => this.parseGameplay(packet));
+        this.gameplayWebsocket.subscribe(packet => {
+            const parsed = this.parseGameplay(packet);
+            this.gameplaySubject.next(parsed);
+        });
     }
 
-    private parseGameinfo(packet: string) { // command :: param1 :: param2 :: param3 :: ...
+    /**
+     * Parse commands from gameinfo updates.
+     * @param packet A gameinfo update to be parsed.
+     * @return a GameinfoUpdate instance with a correct type and params.
+     */
+    private parseGameinfo(packet: string): GameinfoUpdate { // command :: param1 :: param2 :: param3 :: ...
         const parts: string[] = packet.split('::');
         const command = parts[0];
 
+        let parsed: GameinfoUpdate;
+
         switch (command) {
             case 'NewGame':
-                console.log(parts);
                 const gameId = parts[1];
-                this.gameinfoSubject.next({
+                parsed = {
                     command: GameinfoCommand.NEW_GAME,
                     params: gameId
-                });
+                };
                 break;
             case 'NewRound':
                 const playerPositions = new Map<string, RotatedPosition>();
@@ -85,36 +119,36 @@ export class GameCommunication implements GameCommunicationInterface {
                     }
                 }
                 const map = JSON.parse(parts[2]).walls.map((obs: number[]) => obs.map((pos, i) => i % 2 ? pos * this.resizeDimensions.width : pos * this.resizeDimensions.height));
-                this.gameinfoSubject.next({
+                parsed = {
                     command: GameinfoCommand.NEW_ROUND,
                     params: {
                         playerPositions: playerPositions,
                         map: map
-                    } as RoundState
-                });
+                    }
+                };
                 break;
             case 'NewPlayer':
                 const [playerId, nickname] = parts[1].split('/');
-                this.gameinfoSubject.next({
+                parsed = {
                     command: GameinfoCommand.NEW_PLAYER,
                     params: {
                         id: playerId,
                         nickname: nickname
                     }
-                });
+                };
                 break;
             case 'NewScreen':
-                this.gameinfoSubject.next({
+                parsed = {
                     command: GameinfoCommand.NEW_SCREEN,
                     params: ''
-                });
+                };
                 break;
             case 'EndRound':
                 const winnerId = parts[1];
-                this.gameinfoSubject.next({
+                parsed = {
                     command: GameinfoCommand.END_ROUND,
                     params: winnerId
-                });
+                };
                 break;
             case 'ScoreboardUpdate':
                 const update = [];
@@ -127,15 +161,22 @@ export class GameCommunication implements GameCommunicationInterface {
                         });
                     }
                 }
-                this.gameinfoSubject.next({
+                parsed = {
                     command: GameinfoCommand.SCOREBOARD_UPDATE,
                     params: update
-                });
+                };
                 break;
         }
+
+        return parsed;
     }
 
-    private parseGameplay(packet: string) {
+    /**
+     * Parse a gameplay packet (player positions, projectiles etc.).
+     * @param packet A string packet to be parsed.
+     * @return A GameplayUpdate instance.
+     */
+    private parseGameplay(packet: string): GameplayUpdate {
         const playerPositions = new Map<string, RotatedPosition>();
         const projectilePositions = new Map<string, RotatedPosition>();
 
@@ -155,9 +196,9 @@ export class GameCommunication implements GameCommunicationInterface {
             }
         }
 
-        this.gameplaySubject.next({
+        return {
             playerPositions: playerPositions,
             projectilePositions: projectilePositions
-        });
+        };
     }
 }

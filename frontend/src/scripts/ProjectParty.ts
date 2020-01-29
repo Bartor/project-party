@@ -3,9 +3,17 @@ import {Game} from "./game_flow/Game";
 import DisplayObject = PIXI.DisplayObject;
 import {DOTS_PER_DIMENSION, PLAYER_SIZE} from "../config/config";
 
+/**
+ * Draws the game on the screen.
+ */
 export class ProjectParty {
     private app: Application;
 
+    /**
+     * Creates a new instance.
+     * @param container Where the game should be drawn in.
+     * @param game The game to be drawn.
+     */
     constructor(container: HTMLElement, game: Game) {
         const biggerDimension = Math.max(container.clientHeight, container.clientWidth);
 

@@ -1,5 +1,8 @@
 import {MovableGraphics} from "../../shared/abstract/MovableGraphics.asbstract.class";
 
+/**
+ * A single projectile on the map.
+ */
 export class Projectile extends MovableGraphics {
     public marked: boolean = true;
 
