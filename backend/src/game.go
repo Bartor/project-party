@@ -46,7 +46,7 @@ type ControllerMessage struct {
 
 // loadMap performs an HTTP request to the map service and returns a Map structure
 func loadMap() (Map, error) {
-	response, err := http.Get("http://map:3000/generate?width=75&height=75&fillPercentage=42")
+	response, err := http.Get("http://map:3000/generate?width=52&height=52&fillPercentage=46")
 	if err != nil {
 		return Map{}, err
 	}

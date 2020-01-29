@@ -82,15 +82,42 @@ func (m *Map) lineCircleCollision(x1, y1, x2, y2, cx, cy, r float64) bool {
 
 	delta := b*b - 4*a*c
 
-	if delta >= 0 {
+	if delta > 0 {
 		t1 := (-b - math.Sqrt(delta)) / (2 * a)
 		t2 := (-b + math.Sqrt(delta)) / (2 * a)
 
-		if (t1 >= 0.0 && t1 <= 1.0) || (t2 >= 0.0 && t2 <= 1.0) {
+		if (t1 > 0.0 && t1 < 1.0) || (t2 > 0.0 && t2 < 1.0) {
 			// fmt.Println("a b c delta t1 t2", a, b, c, delta, t1, t2)
 			return true
 		}
 	}
 
 	return false
+}
+
+
+/*
+	Computes new player position when moving towards wall - player moves along the wall (with wallAngle slope),
+	(dx, dy) is player position and (newX, newY) potential position without wall
+*/
+func (m *Map) smoothCollison(wallAngle float64, newX float64, newY float64, dx float64, dy float64, slope int) (float64, float64) {
+	if wallAngle == 0.0 {
+		return newX, dy
+	}
+	if wallAngle == 4.0 {
+		return dx, newY
+	}
+	cosA := math.Cos(wallAngle);
+	sinA := math.Sin(wallAngle);
+	if slope == 1 {
+		cosA = math.Cos(2*math.Pi-wallAngle)
+		sinA = math.Sin(2*math.Pi-wallAngle)
+	}
+	transformedX := newX * cosA - newY * sinA + dy * sinA - dx*cosA
+	// transformedY := newX*sinA + newY*cosA - dy*cosA - dx*sinA
+
+	newerX := cosA * transformedX + dx
+	newerY := -sinA*transformedX + dy
+
+	return newerX, newerY
 }

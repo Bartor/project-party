@@ -75,11 +75,38 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 			xPosB := wall[(i+2)%len(wall)]
 			yPosB := wall[(i+3)%len(wall)]
 			if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, newXPos, newYPos, playerRadius) {
-				// fmt.Println("Found collision with wall of index ", i)
-				// fmt.Println("Wall coordinates", wall)
-				// fmt.Println("Point X coordinates", wall[i], wall[i+1])
-				// fmt.Println("Point Y coordinates", wall[i+2], wall[i+3])
-				// fmt.Println("Player coordinates after moving and radius", newXPos, newYPos, playerRadius)
+				wallAngle := 0.0
+				if xPosA==xPosB {
+					wallAngle = 4.0
+				} else {
+					wallAngle = math.Atan((yPosA-yPosB) / (xPosA - xPosB))
+				}
+				slope := 1
+				if wallAngle < 0 {
+					slope = -1;
+				}
+				
+				wallAngle = math.Abs(wallAngle);
+				transformedX, transformedY := p.game.mapData.smoothCollison(wallAngle, newXPos, newYPos, p.xPos, p.yPos, slope)
+				
+				nextWallX := wall[(i+4)%len(wall)]
+				nextWallY := wall[(i+5)%len(wall)]
+				prevWallX := wall[betterModulo(i-2, len(wall))]
+				prevWallY := wall[betterModulo(i-1, len(wall))]
+
+				
+				if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, transformedX, transformedY, playerRadius) && 
+					!p.game.mapData.lineCircleCollision(prevWallX, prevWallY, xPosA, yPosA, transformedX, transformedY, playerRadius) {
+					continue
+				}
+				if p.game.mapData.lineCircleCollision(prevWallX, prevWallY, xPosA, yPosA, transformedX, transformedY, playerRadius) {
+					return
+				}
+				if p.game.mapData.lineCircleCollision(xPosB, yPosB, nextWallX, nextWallY, transformedX, transformedY, playerRadius) {
+					return
+				}
+				
+				p.xPos, p.yPos = transformedX, transformedY
 				return
 			}
 		}
@@ -87,6 +114,15 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 
 	p.xPos = newXPos
 	p.yPos = newYPos
+}
+
+
+func betterModulo(a , b int) int {
+	if a<0 {
+		return b+a%b
+	} else {
+		return a%b
+	}
 }
 
 func (p *Player) shoot(shotAngle int) {
