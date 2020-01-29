@@ -42,7 +42,7 @@ type ControllerMessage struct {
 }
 
 func loadMap() (Map, error) {
-	response, err := http.Get("http://map:3000/generate?width=65&height=65&fillPercentage=43")
+	response, err := http.Get("http://map:3000/generate?width=52&height=52&fillPercentage=46")
 	if err != nil {
 		return Map{}, err
 	}
