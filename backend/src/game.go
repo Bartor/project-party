@@ -362,7 +362,7 @@ func processEvents(g *Game) {
 			victor := g.checkRoundEnd()
 			if victor != nil {
 				fmt.Println("Sending info about end of round with victor with id ", victor.id)
-				g.screen.input <- []byte(fmt.Sprintf("EndRound::%d", victor.id))
+				g.info.input <- []byte(fmt.Sprintf("EndRound::%d", victor.id))
 				victor.score += lastManStandingPrize
 				g.info.input <- g.getScoreBoardUpdate()
 				if g.roundCount < maxRoundCount {
