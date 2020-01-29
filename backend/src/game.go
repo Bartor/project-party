@@ -141,6 +141,7 @@ func (g *Game) round() {
 	spawnPoint := 0
 	for i := range g.players {
 		spawnPoint += len(g.players)
+		spawnPoint %= len(g.mapData.SpawnPoints)
 		g.players[i].xPos = g.mapData.SpawnPoints[spawnPoint].X
 		g.players[i].yPos = g.mapData.SpawnPoints[spawnPoint].Y
 	}
