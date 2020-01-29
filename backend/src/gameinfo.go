@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -38,22 +39,10 @@ func (s *GameInfo) writePump() {
 				s.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-
-			w, err := s.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
+			if (len(string(message)) < 150) {
+				fmt.Println("Sending message to gameinfo socket: ", string(message))
 			}
-			w.Write(message)
-
-			n := len(s.input)
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-s.input)
-			}
-
-			if err := w.Close(); err != nil {
-				return
-			}
+			s.conn.WriteMessage(websocket.TextMessage, message)
 		case <-ticker.C:
 			s.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := s.conn.WriteMessage(websocket.PingMessage, nil); err != nil {

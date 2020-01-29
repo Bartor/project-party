@@ -173,6 +173,7 @@ func (g *Game) round() {
 		messageToSend = append(messageToSend, createJsonFromMap(g.mapData)...)
 		g.info.input <- messageToSend
 		go processEvents(g)
+		return
 	}()
 }
 
@@ -192,7 +193,6 @@ func (g *Game) endGame() {
 // run() handles communication between websockets and the flow of the game setup
 func (g *Game) run() {
 	go g.shotBank.Run()
-	go processEvents(g)
 	go processGameEvents(g)
 	for {
 		select {
@@ -357,10 +357,12 @@ func (g *Game) getScoreBoardUpdate() []byte {
 
 // processEvents(g *Game) handles communication with the screen websocket, sending data regarding new player and shots positions and similar
 func processEvents(g *Game) {
+	keepProcessing := true
 	for range time.Tick(time.Nanosecond * fastRefresh) {
-		if g.screen != nil {
+		if g.screen != nil && keepProcessing {
 			victor := g.checkRoundEnd()
 			if victor != nil {
+				keepProcessing = false
 				fmt.Println("Sending info about end of round with victor with id ", victor.id)
 				g.info.input <- []byte(fmt.Sprintf("EndRound::%d", victor.id))
 				victor.score += lastManStandingPrize
@@ -371,7 +373,7 @@ func processEvents(g *Game) {
 					g.endGame()
 				}
 				return
-			}
+			}	
 			updateString := g.getPlayerPositions()
 			updateString += ":"
 			updateString += g.getShotPositions()
