@@ -8,8 +8,6 @@ import (
 	"strconv"
 )
 
-var addr = flag.String("addr", ":8080", "http service address")
-
 func main() {
 	flag.Parse()
 	games := make([]*Game, 0)
