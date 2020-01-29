@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
-    "watch": "webpack --watch"
+    "watch": "webpack --watch",
+    "docs": "npx typedoc --mode file --readme none --out docs src"
   },
   "author": "Bartosz Barnaba Rajczyk",
   "license": "ISC",
@@ -24,5 +25,8 @@
     "typescript": "^3.7.2",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.10"
+  },
+  "dependencies": {
+    "typedoc": "^0.16.9"
   }
 }
