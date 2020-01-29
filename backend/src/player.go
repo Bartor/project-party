@@ -75,6 +75,27 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 			xPosB := wall[(i+2)%len(wall)]
 			yPosB := wall[(i+3)%len(wall)]
 			if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, newXPos, newYPos, playerRadius) {
+				wallAngle := 0.0
+				if xPosA==xPosB {
+					wallAngle = 4.0
+				} else {
+					wallAngle = math.Atan((yPosA-yPosB) / (xPosA - xPosB))
+				}
+				slope := 1
+				if wallAngle < 0 {
+					slope = -1;
+				}
+				
+				wallAngle = math.Abs(wallAngle);
+				newerXPos, newerYPos := p.game.mapData.smoothCollison(wallAngle, newXPos, newYPos, p.xPos, p.yPos, slope)
+				
+				nextWallX := wall[(i+4)%len(wall)]
+				nextWallY := wall[(i+5)%len(wall)]
+				
+				if p.game.mapData.lineCircleCollision(xPosB, yPosB, nextWallX, nextWallY, newerXPos, newerYPos, playerRadius) {
+					return
+				}
+				p.xPos, p.yPos = newerXPos, newerYPos
 				// fmt.Println("Found collision with wall of index ", i)
 				// fmt.Println("Wall coordinates", wall)
 				// fmt.Println("Point X coordinates", wall[i], wall[i+1])
@@ -88,6 +109,7 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 	p.xPos = newXPos
 	p.yPos = newYPos
 }
+
 
 func (p *Player) shoot(shotAngle int) {
 	if p.is_reloading {
