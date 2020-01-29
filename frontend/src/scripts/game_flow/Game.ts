@@ -39,10 +39,18 @@ export class Game {
                     this.addPlayer(update.params.id, update.params.nickname);
                     this.updateGameStatus();
 
+                    const playerGraphics = [...this.players.values()].map(p => p.getGraphics());
+                    this.graphicsSubject.next({
+                        newPlayers: true,
+                        newMap: false,
+                        map: [],
+                        projectiles: [],
+                        players: playerGraphics
+                    });
+
                     break;
                 case GameinfoCommand.NEW_GAME:
                     this.gameId = update.params as string;
-                    console.log(this.gameId);
                     break;
                 case GameinfoCommand.NEW_ROUND:
                     this.players.forEach(player => player.state = PlayerState.ALIVE);
@@ -53,16 +61,14 @@ export class Game {
                     if (this.round) this.round.end();
 
                     const map = new GameMap(update.params.map);
-
                     const mapGraphics = map.getGraphics();
-                    const playerGraphics = [...this.players.values()].map(p => p.getGraphics());
 
                     this.graphicsSubject.next({
-                        newPlayers: true,
+                        newPlayers: false,
                         newMap: true,
                         map: mapGraphics,
                         projectiles: [],
-                        players: playerGraphics
+                        players: []
                     });
 
                     this.round = new Round(this.players, communicationService.gameplayUpdates);
@@ -72,7 +78,7 @@ export class Game {
                             newMap: false,
                             map: mapGraphics,
                             projectiles: update,
-                            players: playerGraphics
+                            players: []
                         });
                     });
 

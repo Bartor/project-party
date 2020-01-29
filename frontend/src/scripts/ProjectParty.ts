@@ -51,7 +51,7 @@ export class ProjectParty {
             }
 
             if (update.newPlayers) {
-                playerGraphics.forEach(pg => pg.destroy());
+                this.app.stage.removeChild(...playerGraphics);
                 this.app.stage.addChild(...update.players);
                 playerGraphics = update.players;
             }
