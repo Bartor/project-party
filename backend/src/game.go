@@ -179,6 +179,7 @@ func (g *Game) round() {
 
 // endGame() finds the winner of the whole game and sends a message to the screen websocket
 func (g *Game) endGame() {
+    g.roundCount++
 	highScore := 0
 	currWinner := ""
 	for _, player := range g.players {
@@ -322,7 +323,7 @@ func processGameEvents(g *Game) {
 			}
 		}
 
-		if g.roundCount >= maxRoundCount {
+		if g.roundCount > maxRoundCount {
 			return
 		}
 	}
@@ -364,9 +365,9 @@ func processEvents(g *Game) {
 			if victor != nil {
 				keepProcessing = false
 				fmt.Println("Sending info about end of round with victor with id ", victor.id)
-				g.info.input <- []byte(fmt.Sprintf("EndRound::%d", victor.id))
 				victor.score += lastManStandingPrize
 				g.info.input <- g.getScoreBoardUpdate()
+				g.info.input <- []byte(fmt.Sprintf("EndRound::%d", victor.id))
 				if g.roundCount < maxRoundCount {
 					g.round()
 				} else {

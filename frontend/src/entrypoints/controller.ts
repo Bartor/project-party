@@ -24,7 +24,7 @@ window.addEventListener('load', () => {
     button.addEventListener('click', () => {
         let id = gameIdInput.value;
         let nickname = nickInput.value;
-        if (!isNaN(Number(id)) && id !== '') {
+        if (id && !isNaN(Number(id)) && Number(id) >= 0) {
             joinGame(Number(id), nickname);
         } else {
             notifications.notify(`Id is incorrect`, 5000);
@@ -37,7 +37,7 @@ function joinGame(gameId: number, nick: string) {
 
     const communication = new ControllerCommunication(ENDPOINTS.controllerEndpoint + `?id=${gameId}&nick=${nick}`, 50);
     communication.connect().then(() => {
-        notifications.notify(`Joining game ${gameId}`);
+        notifications.notify(`Joining game ${gameId}`, 5000);
         while (container.firstChild) container.removeChild(container.firstChild);
         const controller = new Controller(container, communication);
         controller.drawLoop();
