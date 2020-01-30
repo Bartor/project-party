@@ -1,7 +1,6 @@
 import '../styles/main.scss';
 import '../styles/controller.scss';
 
-import '../helper/notifications/default.scss';
 import {NotificationManager} from "../helper/notifications/NotificationManager";
 import {Controller} from "../scripts/Controller";
 import {ControllerCommunication} from "../scripts/communication/ControllerCommunication.class";

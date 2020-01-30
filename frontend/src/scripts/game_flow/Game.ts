@@ -23,15 +23,14 @@ export class Game {
     private graphicsSubject = new Subject<GraphicsUpdate>();
     public graphicsUpdates = this.graphicsSubject.asObservable();
 
-    private gameStatusUpdateSubject = new Subject<PlayerStatus[]>();
-    public gameStatus = this.gameStatusUpdateSubject.asObservable();
+    private statusSubject = new Subject<PlayerStatus[]>();
+    public status = this.statusSubject.asObservable();
 
-    public gameId: string;
     public playerSize: number = 20;
 
     constructor(
         public readonly communicationService: GameCommunicationInterface,
-        private readonly playerLimit: number = 8,
+        private readonly playerLimit: number = 32,
     ) {
         communicationService.gameinfoUpdates.subscribe(update => {
             switch (update.command) {
@@ -48,9 +47,6 @@ export class Game {
                         players: playerGraphics
                     });
 
-                    break;
-                case GameinfoCommand.NEW_GAME:
-                    this.gameId = update.params as string;
                     break;
                 case GameinfoCommand.NEW_ROUND:
                     this.players.forEach(player => player.state = PlayerState.ALIVE);
@@ -85,10 +81,6 @@ export class Game {
                     this.updateGameStatus();
                     break;
                 case GameinfoCommand.SCOREBOARD_UPDATE:
-                    update.params.forEach((p: { id: string, score: number }) => {
-                        this.statuses.get(p.id).score = p.score;
-                    });
-
                     this.updateGameStatus();
                     break;
             }
@@ -99,7 +91,7 @@ export class Game {
      * Start fetching gameplay updates and start the game.
      */
     public startGame() {
-        this.communicationService.startGameplayUpdates(this.gameId);
+        this.communicationService.startGameplayUpdates();
     }
 
     /**
@@ -140,6 +132,11 @@ export class Game {
         this.players.forEach((player, id) => {
             this.statuses.get(id).state = player.state;
         });
-        this.gameStatusUpdateSubject.next([...this.statuses.values()].sort((a, b) => b.score - a.score));
+        this.statusSubject.next([...this.statuses.values()].sort((a, b) => b.score - a.score));
+    }
+
+    public resolveStatus(id: string): PlayerStatus {
+        this.updateGameStatus();
+        return this.statuses.get(id);
     }
 }

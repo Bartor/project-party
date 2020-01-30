@@ -18,7 +18,7 @@ export interface GameCommunicationInterface {
      * Start fetching the fast updates.
      * @param gameId Id of the game.
      */
-    startGameplayUpdates: (gameId: string) => void;
+    startGameplayUpdates: () => void;
     /**
      * Dimensions of the screen this class should resize to.
      */

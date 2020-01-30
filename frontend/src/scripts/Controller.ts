@@ -15,7 +15,7 @@ export class Controller {
     private centerMoveTouch = {x: 0, y: 0};
     private centerShootTouch = {x: 0, y: 0};
 
-    private pointers: (PointerEvent & {controlType: string})[] = [];
+    private pointers: (PointerEvent & { controlType: string })[] = [];
 
     /**
      * Create a new instance.
@@ -72,11 +72,11 @@ export class Controller {
         let heightFlag = this.canvas.height > this.canvas.width / 2;
         this.radius = heightFlag ? this.canvas.width / 6 : this.canvas.height / 3;
         this.centerMove = {
-            x: this.radius * 2,
+            x: this.radius * 1.5,
             y: this.canvas.height / 2
         };
         this.centerShoot = {
-            x: this.canvas.width - this.radius * 2,
+            x: this.canvas.width - this.radius * 1.5,
             y: this.canvas.height / 2
         };
         this.centerShootTouch = {...this.centerShoot};
@@ -132,11 +132,11 @@ export class Controller {
         let moveDist = this.dist(this.centerMove, this.centerMoveTouch);
         if (moveDist > 0) {
             let angle = this.angle(this.centerMove, this.centerMoveTouch);
-            let normalizedMoveDist = moveDist/this.radius > 1 ? 1 : moveDist/this.radius;
+            let normalizedMoveDist = moveDist / this.radius > 1 ? 1 : moveDist / this.radius;
             this.communication.move(angle, normalizedMoveDist);
         }
         let shootDist = this.dist(this.centerShoot, this.centerShootTouch);
-        if (shootDist > this.radius/2) {
+        if (shootDist > this.radius / 2) {
             let angle = this.angle(this.centerShoot, this.centerShootTouch);
             this.communication.shoot(angle);
         }
@@ -157,14 +157,14 @@ export class Controller {
 
         this.context.beginPath();
         this.context.fillStyle = '#181818';
-        this.context.arc(this.centerShoot.x, this.centerShoot.y, this.radius/2, 0, 2 * Math.PI); // shooting inner
+        this.context.arc(this.centerShoot.x, this.centerShoot.y, this.radius / 2, 0, 2 * Math.PI); // shooting inner
         // circle
         this.context.fill();
 
         this.context.beginPath();
         this.context.fillStyle = '#323232';
-        this.context.arc(this.centerMoveTouch.x, this.centerMoveTouch.y, this.radius/4, 0, 2 * Math.PI); // moving pad
-        this.context.arc(this.centerShootTouch.x, this.centerShootTouch.y, this.radius/4, 0, 2 * Math.PI); // shooting pad
+        this.context.arc(this.centerMoveTouch.x, this.centerMoveTouch.y, this.radius / 4, 0, 2 * Math.PI); // moving pad
+        this.context.arc(this.centerShootTouch.x, this.centerShootTouch.y, this.radius / 4, 0, 2 * Math.PI); // shooting pad
         this.context.fill();
 
         requestAnimationFrame(() => this.drawLoop());
@@ -181,12 +181,12 @@ export class Controller {
      * Angle between two points.
      */
     private angle(pivot: Point, point: Point) {
-        let sin = Math.abs(point.y - pivot.y)/this.dist(pivot, point);
+        let sin = Math.abs(point.y - pivot.y) / this.dist(pivot, point);
         let calculatedAngle: number;
 
         if (pivot.x < point.x) {
             if (pivot.y > point.y) {
-                calculatedAngle = 2*Math.PI - Math.asin(sin);
+                calculatedAngle = 2 * Math.PI - Math.asin(sin);
             } else {
                 calculatedAngle = Math.asin(sin);
             }
@@ -198,6 +198,6 @@ export class Controller {
             }
         }
 
-        return Math.round(calculatedAngle*180/Math.PI);
+        return Math.round(calculatedAngle * 180 / Math.PI);
     }
 }

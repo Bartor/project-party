@@ -7,5 +7,6 @@ export enum GameinfoCommand {
     NEW_GAME,
     NEW_SCREEN,
     SCOREBOARD_UPDATE,
-    END_ROUND
+    END_ROUND,
+    END_GAME
 }

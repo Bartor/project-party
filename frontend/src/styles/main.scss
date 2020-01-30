@@ -15,6 +15,7 @@ header {
   border-radius: 5px;
   padding: 5px;
   margin: 5px;
+  font-size: 1.5em;
 
   &:focus {
     outline: none;
@@ -32,7 +33,7 @@ input {
 
 button {
   @include interaction-style;
-  transition: transform 50ms;
+  transition: transform 200ms;
 
   &:active {
     transform: scale(0.95);

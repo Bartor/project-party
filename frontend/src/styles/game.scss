@@ -9,17 +9,38 @@ html, body {
   margin: 0;
 
   main {
-    background-color: black;
+    background-color: $bg-color;
+    overflow: hidden;
 
     height: 100%;
 
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 25% 100vh 25%;
 
     #container {
+      position: relative;
       height: 100vh;
       width: 100vh;
+
+      #notifications {
+        position: absolute;
+
+        div {
+          @include interaction-style;
+          background-color: $bg-color;
+
+          margin: 0;
+          width: 100vh;
+          height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+
+          p {
+            text-align: center;
+          }
+        }
+      }
     }
 
     section {
@@ -28,8 +49,22 @@ html, body {
         display: flex;
         flex-flow: column;
       }
+
       header {
         justify-self: flex-start;
+      }
+
+      table {
+        font-size: 1.5em;
+
+        td {
+          padding: 10px;
+
+          &:first-child {
+            line-height: 0;
+          }
+        }
+
       }
 
       background-color: $bg-color;
@@ -39,6 +74,7 @@ html, body {
       height: 100%;
       display: flex;
       flex-flow: column;
+      justify-content: center;
       align-items: center;
     }
   }

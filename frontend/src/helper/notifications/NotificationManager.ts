@@ -15,30 +15,39 @@ export class NotificationManager {
     ) {
     }
 
+    private zIdx = 1;
+
     /**
      * Display a new notification.
      * @param message A message to be displayed.
-     * @param timeout How long a message should stay on screen, in ms.
+     * @param timeout Provide a timeout if you want to clear it automatically.
+     * @return Function to clear notification.
      */
-    public notify(message: string, timeout: number = 5000) {
-        let notification = document.createElement('p');
+    public notify(message: string, timeout: number = -1): () => void {
+        const container = document.createElement('div');
+        const notification = document.createElement('p');
         notification.textContent = message;
         if (this.animated) {
-            notification.style.transform = 'scale(0)';
-            notification.style.transition = `transform ${this.animationTime}ms`;
+            container.style.transform = 'scale(0)';
+            container.style.zIndex = `${this.zIdx++}`;
+            container.style.transition = `transform ${this.animationTime}ms`;
 
             setTimeout(() => {
-                notification.style.transform = 'scale(1)';
+                container.style.transform = 'scale(1)';
             }, 0);
         }
-        this.container.append(notification);
+        container.append(notification);
+        this.container.append(container);
 
-        setTimeout(() => {
-            notification.style.transform = 'scale(0)';
+        const ret = () => {
+            container.style.transform = 'scale(0)';
 
             setTimeout(() => {
-                this.container.removeChild(notification);
+                this.container.removeChild(container);
             }, this.animationTime);
-        }, timeout);
+        };
+
+        if (timeout > 0) setTimeout(ret, timeout);
+        return ret;
     }
 }

@@ -38,6 +38,8 @@ export class GameCommunication implements GameCommunicationInterface {
     private gameplaySubject = new Subject<GameplayUpdate>();
     public gameplayUpdates = this.gameplaySubject.asObservable();
 
+    private gameId: string;
+
     public readonly resizeDimensions = {
         width: 1,
         height: 1
@@ -69,7 +71,10 @@ export class GameCommunication implements GameCommunicationInterface {
                 const result = this.parseGameinfo(packet);
                 this.gameinfoSubject.next(result);
 
-                if (result.command === GameinfoCommand.NEW_GAME) resolve(result.params);
+                if (result.command === GameinfoCommand.NEW_GAME) {
+                    this.gameId = result.params;
+                    resolve(result.params);
+                }
             }, err => {
                 reject(err);
             });
@@ -80,9 +85,9 @@ export class GameCommunication implements GameCommunicationInterface {
      * Start the game and start fetching gameplay updates.
      * @param id Id of the game to start fetching.
      */
-    public startGameplayUpdates(id: string) {
+    public startGameplayUpdates() {
         this.gameplayWebsocket = new WebSocketSubject({
-            url: this.gameplayAddress + `?id=${id}`,
+            url: this.gameplayAddress + `?id=${this.gameId}`,
             deserializer: packet => packet.data
         });
         this.gameplayWebsocket.subscribe(packet => {
@@ -143,11 +148,18 @@ export class GameCommunication implements GameCommunicationInterface {
                     params: ''
                 };
                 break;
-            case 'EndRound':
-                const winnerId = parts[1];
+            case 'EndGame':
+                const gameWinnerId = parts[1];
                 parsed = {
-                    command: GameinfoCommand.END_ROUND,
-                    params: winnerId
+                    command: GameinfoCommand.NEW_SCREEN,
+                    params: gameWinnerId
+                };
+                break;
+            case 'EndRound':
+                const roundWinnerId = parts[1];
+                parsed = {
+                    command: GameinfoCommand.END_GAME,
+                    params: roundWinnerId
                 };
                 break;
             case 'ScoreboardUpdate':
