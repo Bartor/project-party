@@ -40,5 +40,26 @@ html, body {
       }
     }
   }
+
+  #notifications {
+    position: absolute;
+    bottom: 0;
+    width: 50%;
+    transform: translateX(50%);
+
+    div {
+      @include interaction-style;
+      background-color: $bg-color;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      p {
+        text-align: center;
+      }
+    }
+  }
+
 }
 

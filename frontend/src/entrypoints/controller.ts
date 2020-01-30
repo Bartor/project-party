@@ -27,7 +27,7 @@ window.addEventListener('load', () => {
         if (!isNaN(Number(id)) && id !== '') {
             joinGame(Number(id), nickname);
         } else {
-            notifications.notify(`Id is incorrect`);
+            notifications.notify(`Id is incorrect`, 5000);
         }
     });
 });
@@ -42,6 +42,7 @@ function joinGame(gameId: number, nick: string) {
         const controller = new Controller(container, communication);
         controller.drawLoop();
     }).catch(err => {
-        notifications.notify(`Connection error: ${err}`);
+        console.error(err);
+        notifications.notify(`Connection error; check if id is correct`, 5000);
     });
 }
