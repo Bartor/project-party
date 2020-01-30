@@ -30,7 +30,7 @@ export class Game {
 
     constructor(
         public readonly communicationService: GameCommunicationInterface,
-        private readonly playerLimit: number = 32,
+        private readonly playerLimit: number = 16,
     ) {
         communicationService.gameinfoUpdates.subscribe(update => {
             switch (update.command) {
@@ -72,7 +72,7 @@ export class Game {
                         this.graphicsSubject.next({
                             newPlayers: false,
                             newMap: false,
-                            map: mapGraphics,
+                            map: [],
                             projectiles: update,
                             players: []
                         });

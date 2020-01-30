@@ -72,7 +72,7 @@ export class ProjectParty {
             }
 
             if (update.newMap) {
-                mapGraphics.forEach(mg => mg.destroy());
+                this.app.stage.removeChild(...mapGraphics); // todo make this destroy work
                 this.app.stage.addChild(...update.map);
                 mapGraphics = update.map;
             }
@@ -100,10 +100,9 @@ export class ProjectParty {
                     });
                     break;
                 case GameinfoCommand.END_GAME:
-                    const gameWinner = this.game.resolveStatus(update.params);
                     this.gameMessagesSubject.next({
                         clear: false,
-                        message: `${gameWinner.name} won the round!`
+                        message: `${update.params.winner} won the game with ${update.params.points} points!`
                     });
                     break;
                 case GameinfoCommand.SCOREBOARD_UPDATE:

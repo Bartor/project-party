@@ -1,4 +1,5 @@
-const WEBSOCKET_ADDRESS = 'localhost';
+// const WEBSOCKET_ADDRESS = 'localhost'; // for possible future deployment
+const WEBSOCKET_ADDRESS = window.location.host; // for current deployment
 const WEBSOCKET_PORT = 8080;
 const WEBSOCKET_ENDPOINTS: {[endpoint: string]: string} = {
     CONTROLLER: 'controllerWs',
@@ -30,12 +31,22 @@ class Color {
 }
 
 export const PLAYER_COLORS = [
-    new Color(0x007EA7),
-    new Color(0xF1D302),
-    new Color(0xC1292E),
-    new Color(0xFDFFFC),
-    new Color(0x78D5D7),
-    new Color(0x136F63)
+    new Color(0x567feb),
+    new Color(0x8f0b5f),
+    new Color(0xacfcad),
+    new Color(0xffec6d),
+    new Color(0x53034b),
+    new Color(0x0a547b),
+    new Color(0xff8686),
+    new Color(0x278c7f),
+    new Color(0xad6dea),
+    new Color(0xfb4771),
+    new Color(0xffa763),
+    new Color(0x0ce7a7),
+    new Color(0x9fb9ff),
+    new Color(0xff4040),
+    new Color(0xce186a),
+    new Color(0xafafcf),
 ];
 
 export const DOTS_PER_DIMENSION = 800;

@@ -149,16 +149,19 @@ export class GameCommunication implements GameCommunicationInterface {
                 };
                 break;
             case 'EndGame':
-                const gameWinnerId = parts[1];
+                const [points, gameWinnerId] = parts[1].split('/');
                 parsed = {
-                    command: GameinfoCommand.NEW_SCREEN,
-                    params: gameWinnerId
+                    command: GameinfoCommand.END_GAME,
+                    params: {
+                        points: Number(points),
+                        winner: gameWinnerId
+                    }
                 };
                 break;
             case 'EndRound':
                 const roundWinnerId = parts[1];
                 parsed = {
-                    command: GameinfoCommand.END_GAME,
+                    command: GameinfoCommand.END_ROUND,
                     params: roundWinnerId
                 };
                 break;
