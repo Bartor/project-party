@@ -6,15 +6,15 @@ import (
 )
 
 type Player struct {
-	game       *Game
-	nick 			 string
-	id         int
-	xPos       float64
-	yPos       float64
-	angle      int
-	eventQueue []*PlayerEvent
-	alive      bool
-	currSpeed  float64
+	game         *Game
+	nick         string
+	id           int
+	xPos         float64
+	yPos         float64
+	angle        int
+	eventQueue   []*PlayerEvent
+	alive        bool
+	currSpeed    float64
 	is_reloading bool
 	score        int
 }
@@ -76,26 +76,25 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 			yPosB := wall[(i+3)%len(wall)]
 			if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, newXPos, newYPos, playerRadius) {
 				wallAngle := 0.0
-				if xPosA==xPosB {
+				if xPosA == xPosB {
 					wallAngle = 4.0
 				} else {
-					wallAngle = math.Atan((yPosA-yPosB) / (xPosA - xPosB))
+					wallAngle = math.Atan((yPosA - yPosB) / (xPosA - xPosB))
 				}
 				slope := 1
 				if wallAngle < 0 {
-					slope = -1;
+					slope = -1
 				}
-				
-				wallAngle = math.Abs(wallAngle);
+
+				wallAngle = math.Abs(wallAngle)
 				transformedX, transformedY := p.game.mapData.smoothCollison(wallAngle, newXPos, newYPos, p.xPos, p.yPos, slope)
-				
+
 				nextWallX := wall[(i+4)%len(wall)]
 				nextWallY := wall[(i+5)%len(wall)]
 				prevWallX := wall[betterModulo(i-2, len(wall))]
 				prevWallY := wall[betterModulo(i-1, len(wall))]
 
-				
-				if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, transformedX, transformedY, playerRadius) && 
+				if p.game.mapData.lineCircleCollision(xPosA, yPosA, xPosB, yPosB, transformedX, transformedY, playerRadius) &&
 					!p.game.mapData.lineCircleCollision(prevWallX, prevWallY, xPosA, yPosA, transformedX, transformedY, playerRadius) {
 					continue
 				}
@@ -105,7 +104,7 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 				if p.game.mapData.lineCircleCollision(xPosB, yPosB, nextWallX, nextWallY, transformedX, transformedY, playerRadius) {
 					return
 				}
-				
+
 				p.xPos, p.yPos = transformedX, transformedY
 				return
 			}
@@ -116,12 +115,11 @@ func (p *Player) move(moveSpeed float64, moveAngle int) {
 	p.yPos = newYPos
 }
 
-
-func betterModulo(a , b int) int {
-	if a<0 {
-		return b+a%b
+func betterModulo(a, b int) int {
+	if a < 0 {
+		return b + a%b
 	} else {
-		return a%b
+		return a % b
 	}
 }
 
@@ -151,9 +149,10 @@ func (p *Player) kill() {
 }
 
 func (p *Player) respawn() {
-	startingXPos := p.game.mapData.SpawnPoints[(len(p.game.mapData.SpawnPoints)-p.id*len(p.game.players))%len(p.game.mapData.SpawnPoints)].X
-	startingYPos := p.game.mapData.SpawnPoints[(len(p.game.mapData.SpawnPoints)-p.id*len(p.game.players))%len(p.game.mapData.SpawnPoints)].Y
-	p.xPos = startingXPos
-	p.yPos = startingYPos
+	lowerRollBound := (len(p.game.mapData.SpawnPoints) / len(p.game.players)) * p.id
+	upperRollBound := (len(p.game.mapData.SpawnPoints) / len(p.game.players)) * (p.id + 1)
+	rollIndex := (rng.Intn(upperRollBound-lowerRollBound) + lowerRollBound) % len(p.game.mapData.SpawnPoints)
+	p.xPos = p.game.mapData.SpawnPoints[rollIndex].X
+	p.yPos = p.game.mapData.SpawnPoints[rollIndex].Y
 	p.alive = true
 }

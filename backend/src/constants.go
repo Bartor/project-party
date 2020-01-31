@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 	"flag"
+	"math/rand"
 )
 
 // Constants for socket creations
@@ -62,3 +63,5 @@ var currentId uint64 = 0
 
 // addr holds the required address flags for websocket communication
 var addr = flag.String("addr", ":8080", "http service address")
+
+var rng = rand.New(rand.NewSource(time.Now().Unix()))

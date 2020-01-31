@@ -15,7 +15,7 @@ import (
 
 // Game holds all the necessary channels and attributes that allow us to handle the game flow
 type Game struct {
-	id          uint64 // Current game id
+	id          uint64               // Current game id
 	controllers map[*Controller]bool // Array of Controller pointers
 	screen      *Screen
 	info        *GameInfo
@@ -179,7 +179,7 @@ func (g *Game) round() {
 
 // endGame() finds the winner of the whole game and sends a message to the screen websocket
 func (g *Game) endGame() {
-    g.roundCount++
+	g.roundCount++
 	highScore := 0
 	currWinner := ""
 	for _, player := range g.players {
@@ -198,14 +198,16 @@ func (g *Game) run() {
 	for {
 		select {
 		case controller := <-g.registerController:
-			g.controllers[controller] = true
-			newPlayer := NewPlayer(g, controller.nick, 0, 0)
-			g.players[controller] = newPlayer
-			select {
-			case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d/%s", newPlayer.id, newPlayer.nick)):
-				fmt.Println("Sent information regarding new player of id ", newPlayer.id)
-			default:
-				fmt.Println("huh")
+			if g.roundCount == 0 {
+				g.controllers[controller] = true
+				newPlayer := NewPlayer(g, controller.nick, 0, 0)
+				g.players[controller] = newPlayer
+				select {
+				case g.info.input <- []byte(fmt.Sprintf("NewPlayer::%d/%s", newPlayer.id, newPlayer.nick)):
+					fmt.Println("Sent information regarding new player of id ", newPlayer.id)
+				default:
+					fmt.Println("huh")
+				}
 			}
 		case controller := <-g.unregisterController:
 			if _, ok := g.controllers[controller]; ok {
@@ -329,7 +331,7 @@ func processGameEvents(g *Game) {
 	}
 }
 
-// checkRoundEnd() returns the winner of the current round, nil if it's still ongoing 
+// checkRoundEnd() returns the winner of the current round, nil if it's still ongoing
 func (g *Game) checkRoundEnd() *Player {
 	var victorAlive *Player = nil
 	for _, currPlayer := range g.players {
@@ -374,7 +376,7 @@ func processEvents(g *Game) {
 					g.endGame()
 				}
 				return
-			}	
+			}
 			updateString := g.getPlayerPositions()
 			updateString += ":"
 			updateString += g.getShotPositions()
